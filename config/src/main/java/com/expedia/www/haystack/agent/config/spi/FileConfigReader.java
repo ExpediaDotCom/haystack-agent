@@ -24,7 +24,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.commons.lang3.StringUtils;
 
 public class FileConfigReader implements ConfigReader {
-
     private final static String DEFAULT_CONFIG_FILE_PATH = "agent-config.yaml";
 
     @Override

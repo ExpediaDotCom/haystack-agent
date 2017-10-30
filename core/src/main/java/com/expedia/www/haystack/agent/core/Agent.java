@@ -21,5 +21,5 @@ import com.expedia.www.haystack.agent.config.AgentConfig;
 public interface Agent {
     String getName();
 
-    void initialize(final AgentConfig config);
+    void initialize(final AgentConfig config) throws Exception;
 }
