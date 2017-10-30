@@ -18,14 +18,27 @@
 package com.expedia.www.haystack.agent.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 
 import java.util.List;
 
+/**
+ * Configuration for agents that are loaded as SPI(service provider interface).
+ */
 public class Config {
     @JsonProperty("agents")
     private List<AgentConfig> agentConfigs;
 
     public List<AgentConfig> getAgentConfigs() {
         return agentConfigs;
+    }
+
+    public void setAgentConfigs(List<AgentConfig> agentConfigs) {
+        this.agentConfigs = agentConfigs;
+    }
+
+    @Override
+    public String toString() {
+        return ReflectionToStringBuilder.toString(this);
     }
 }

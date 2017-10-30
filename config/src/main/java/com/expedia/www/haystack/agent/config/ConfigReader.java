@@ -18,7 +18,17 @@
 package com.expedia.www.haystack.agent.config;
 
 public interface ConfigReader {
+    /**
+     * returns the unique name of this config reader, for e.g. 'file' if loading configuration
+     * from file [ConfigFileReader], 'http' if reading the configuration from http endpoint
+     * @return unique name for the config reader
+     */
     String getName();
 
+    /**
+     * loads the config and returns the agent config object
+     * @return Config object
+     * @throws Exception
+     */
     Config read() throws Exception;
 }

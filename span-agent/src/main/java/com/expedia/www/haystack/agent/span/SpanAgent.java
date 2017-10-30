@@ -42,8 +42,8 @@ public class SpanAgent implements Agent {
     public void initialize(final AgentConfig config) throws IOException {
         final List<Dispatcher> dispatchers = new ArrayList<>();
 
-        final ServiceLoader<Dispatcher> loadeDispatchers = ServiceLoader.load(Dispatcher.class);
-        for (final Dispatcher dispatcher : loadeDispatchers) {
+        final ServiceLoader<Dispatcher> loadedDispatchers = ServiceLoader.load(Dispatcher.class);
+        for (final Dispatcher dispatcher : loadedDispatchers) {
             config.getDispatchers()
                     .entrySet()
                     .stream()
@@ -55,7 +55,7 @@ public class SpanAgent implements Agent {
         }
 
         final ServerImpl server = NettyServerBuilder
-                .forPort((int)config.getProps().get("port"))
+                .forPort(Integer.parseInt(config.getProps().get("port").toString()))
                 .addService(new SpanAgentService(dispatchers))
                 .build()
                 .start();
