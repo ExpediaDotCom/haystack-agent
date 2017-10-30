@@ -16,23 +16,29 @@
  */
 package com.expedia.www.haystack.agent.core;
 
+import com.expedia.www.haystack.agent.config.AgentConfig;
+import com.expedia.www.haystack.agent.config.Config;
+import com.expedia.www.haystack.agent.config.ConfigReader;
 import org.apache.commons.lang3.StringUtils;
-import com.expedia.www.haystack.agent.config.*;
 
+import java.util.Optional;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 
 public class AgentService {
+
     private AgentService() { }
 
     private void run(String configProviderName) throws Exception {
         final Config config = loadConfig(configProviderName);
         final ServiceLoader<Agent> agentLoader = ServiceLoader.load(Agent.class);
-        for (Agent agent : agentLoader) {
-            config.getAgentConfigs()
+        for (final Agent agent : agentLoader) {
+            final Optional<AgentConfig> mayBeAgent = config.getAgentConfigs()
                     .stream()
-                    .filter((c) -> c.getName().equalsIgnoreCase(agent.getName()))
-                    .forEach(agent::initialize);
+                    .filter((c) -> c.getName().equalsIgnoreCase(agent.getName())).findFirst();
+            if(mayBeAgent.isPresent()) {
+                agent.initialize(mayBeAgent.get());
+            }
         }
     }
 
@@ -42,7 +48,7 @@ public class AgentService {
         }
 
         final ServiceLoader<ConfigReader> configLoader = ServiceLoader.load(ConfigReader.class);
-        for (ConfigReader reader : configLoader) {
+        for (final ConfigReader reader : configLoader) {
             if (reader.getName().equalsIgnoreCase(configProviderName)) {
                 return reader.read();
             }

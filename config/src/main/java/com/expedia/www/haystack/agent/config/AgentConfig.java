@@ -17,9 +17,20 @@
 
 package com.expedia.www.haystack.agent.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Map;
 
 public class AgentConfig {
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("props")
+    private Map<String, Object> props;
+
+    @JsonProperty("dispatchers")
+    private Map<String, Map<String, Object>> dispatchers;
+
     public String getName() {
         return name;
     }
@@ -28,14 +39,19 @@ public class AgentConfig {
         this.name = name;
     }
 
-    public Map<String, String> getProps() {
+    public Map<String, Object> getProps() {
         return props;
     }
 
-    public void setProps(Map<String, String> props) {
+    public void setProps(Map<String, Object> props) {
         this.props = props;
     }
 
-    private String name;
-    private Map<String, String> props;
+    public Map<String, Map<String, Object>> getDispatchers() {
+        return dispatchers;
+    }
+
+    public void setDispatchers(Map<String, Map<String, Object>> dispatchers) {
+        this.dispatchers = dispatchers;
+    }
 }

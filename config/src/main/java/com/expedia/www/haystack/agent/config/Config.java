@@ -17,16 +17,15 @@
 
 package com.expedia.www.haystack.agent.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class Config {
+    @JsonProperty("agents")
+    private List<AgentConfig> agentConfigs;
+
     public List<AgentConfig> getAgentConfigs() {
         return agentConfigs;
     }
-
-    public void setAgents(List<AgentConfig> agentConfigs) {
-        this.agentConfigs = agentConfigs;
-    }
-
-    private List<AgentConfig> agentConfigs;
 }

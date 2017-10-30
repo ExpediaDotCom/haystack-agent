@@ -15,20 +15,16 @@
  *
  */
 
-package com.expedia.www.haystack.agent.spans;
+package com.expedia.www.haystack.agent.span;
 
-import com.expedia.www.haystack.agent.config.AgentConfig;
-import com.expedia.www.haystack.agent.core.Agent;
+import com.expedia.open.tracing.Span;
 
-public class SpanAgent implements Agent {
+import java.util.Map;
 
-    @Override
-    public String getName() {
-        return "spans";
-    }
+public interface Dispatcher {
+    String getName();
 
-    @Override
-    public void initialize(AgentConfig config) {
-        // start grpc server and initialize the KPL
-    }
+    void dispatch(final Span record) throws Exception;
+
+    void initialize(final Map<String, Object> conf);
 }
