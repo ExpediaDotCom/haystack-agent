@@ -23,6 +23,7 @@ import com.expedia.open.tracing.agent.api.SpanAgentGrpc;
 import com.expedia.www.haystack.agent.span.Dispatcher;
 import io.grpc.stub.StreamObserver;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,13 +36,13 @@ public class SpanAgentService extends SpanAgentGrpc.SpanAgentImplBase {
     private final List<Dispatcher> dispatchers;
 
     public SpanAgentService(List<Dispatcher> dispatchers) {
+        Validate.notEmpty(dispatchers);
         this.dispatchers = dispatchers;
     }
 
     @Override
     public void dispatch(Span record, StreamObserver<DispatchResult> responseObserver) {
         final DispatchResult.Builder result = DispatchResult.newBuilder().setCode(DispatchResult.ResultCode.SUCCESS);
-
         final StringBuilder failedDispatchers = new StringBuilder();
 
         for(Dispatcher d : dispatchers) {

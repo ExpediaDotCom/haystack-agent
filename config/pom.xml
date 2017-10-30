@@ -21,18 +21,23 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
-                <version>1.0</version>
                 <executions>
                     <execution>
                         <id>test</id>
                         <goals>
                             <goal>test</goal>
                         </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <HAYSTACK_CONFIG_FILE_PATH>src/test/resources/config.yaml</HAYSTACK_CONFIG_FILE_PATH>
+                            </environmentVariables>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

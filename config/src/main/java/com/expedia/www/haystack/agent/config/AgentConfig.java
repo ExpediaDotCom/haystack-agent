@@ -18,9 +18,14 @@
 package com.expedia.www.haystack.agent.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 
 import java.util.Map;
 
+/**
+ * configuration for single agent that is uniquely identified by a name.
+ *
+ */
 public class AgentConfig {
     @JsonProperty("name")
     private String name;
@@ -53,5 +58,10 @@ public class AgentConfig {
 
     public void setDispatchers(Map<String, Map<String, Object>> dispatchers) {
         this.dispatchers = dispatchers;
+    }
+
+    @Override
+    public String toString() {
+        return ReflectionToStringBuilder.toString(this);
     }
 }

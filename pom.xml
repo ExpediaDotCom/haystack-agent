@@ -20,10 +20,16 @@
         <slf4j-api.version>1.7.25</slf4j-api.version>
         <jackson.version>2.9.0</jackson.version>
         <commons-lang.version>3.4</commons-lang.version>
+        <grpc.version>1.4.0</grpc.version>
+
+        <scala.major.version>2</scala.major.version>
+        <scala.minor.version>11</scala.minor.version>
+        <scala.tiny.version>8</scala.tiny.version>
+        <scala.major.minor.version>${scala.major.version}.${scala.minor.version}</scala.major.minor.version>
+        <scala-library.version>${scala.major.version}.${scala.minor.version}.${scala.tiny.version}</scala-library.version>
         <testng.version>6.8</testng.version>
         <pegdown.version>1.6.0</pegdown.version>
         <scalatest.version>3.0.3</scalatest.version>
-        <grpc.version>1.4.0</grpc.version>
     </properties>
 
     <dependencyManagement>
@@ -124,8 +130,20 @@
 
         <!-- Test Dependencies  -->
         <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala-library.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>${scala-library.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
+            <artifactId>scalatest_${scala.major.minor.version}</artifactId>
             <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
@@ -176,11 +194,19 @@
                         </execution>
                     </executions>
                 </plugin>
-
                 <plugin>
-                    <groupId>com.github.os72</groupId>
-                    <artifactId>protoc-jar-maven-plugin</artifactId>
-                    <version>3.3.0.1</version>
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <version>3.2.1</version>
+                    <executions>
+                        <execution>
+                            <id>scala-test-compile</id>
+                            <phase>process-test-resources</phase>
+                            <goals>
+                                <goal>testCompile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
 
                 <plugin>
@@ -222,5 +248,16 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 </project>

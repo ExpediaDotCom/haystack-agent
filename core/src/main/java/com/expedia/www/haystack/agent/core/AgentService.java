@@ -20,12 +20,16 @@ import com.expedia.www.haystack.agent.config.AgentConfig;
 import com.expedia.www.haystack.agent.config.Config;
 import com.expedia.www.haystack.agent.config.ConfigReader;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 
 public class AgentService {
+
+    private static Logger LOGGER = LoggerFactory.getLogger(AgentService.class);
 
     private AgentService() { }
 
@@ -37,6 +41,7 @@ public class AgentService {
                     .stream()
                     .filter((c) -> c.getName().equalsIgnoreCase(agent.getName())).findFirst();
             if(mayBeAgent.isPresent()) {
+                LOGGER.info("Initializing agent={} with config={}", agent.getName(), mayBeAgent.get());
                 agent.initialize(mayBeAgent.get());
             }
         }
