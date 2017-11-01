@@ -12,6 +12,7 @@
         <module>file-config-spi</module>
         <module>span-agent-spi</module>
         <module>agent</module>
+        <module>kinesis-span-dispatcher</module>
     </modules>
 
     <properties>
