@@ -1,0 +1,16 @@
+FROM openjdk:8-jre
+MAINTAINER Haystack <haystack@expedia.com>
+
+ENV APP_NAME haystack-agent
+ENV APP_HOME /app/bin
+
+RUN mkdir -p ${APP_HOME}
+
+COPY agent/target/${APP_NAME}-*SNAPSHOT.jar ${APP_HOME}/${APP_NAME}.jar
+COPY docker/start-app.sh ${APP_HOME}/
+
+RUN chmod +x ${APP_HOME}/start-app.sh
+
+WORKDIR ${APP_HOME}
+
+ENTRYPOINT ["./start-app.sh"]

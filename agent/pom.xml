@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>com.expedia.www</groupId>
-            <artifactId>haystack-agent-interfaces</artifactId>
+            <artifactId>haystack-agent-api</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
@@ -25,6 +25,11 @@
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-span-agent-spi</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.expedia.www</groupId>
+            <artifactId>haystack-kafka-dispatcher-spi</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

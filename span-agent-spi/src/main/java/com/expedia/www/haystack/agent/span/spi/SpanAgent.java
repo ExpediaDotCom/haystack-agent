@@ -19,7 +19,7 @@ package com.expedia.www.haystack.agent.span.spi;
 
 import com.expedia.www.haystack.agent.core.Agent;
 import com.expedia.www.haystack.agent.core.config.AgentConfig;
-import com.expedia.www.haystack.agent.core.dispatcher.Dispatcher;
+import com.expedia.www.haystack.agent.core.Dispatcher;
 import com.expedia.www.haystack.agent.span.service.SpanAgentGrpcService;
 import io.grpc.internal.ServerImpl;
 import io.grpc.netty.NettyServerBuilder;
@@ -41,6 +41,7 @@ public class SpanAgent implements Agent {
 
     @Override
     public void initialize(final AgentConfig config) throws IOException {
+
         final List<Dispatcher> dispatchers = new ArrayList<>();
 
         final ServiceLoader<Dispatcher> loadedDispatchers = ServiceLoader.load(Dispatcher.class);
@@ -55,13 +56,20 @@ public class SpanAgent implements Agent {
                     });
         }
 
+        final int port = Integer.parseInt(config.getProps().get("port").toString());
         final ServerImpl server = NettyServerBuilder
-                .forPort(Integer.parseInt(config.getProps().get("port").toString()))
+                .forPort(port)
+                .directExecutor()
                 .addService(new SpanAgentGrpcService(dispatchers))
                 .build()
                 .start();
 
+        LOGGER.info("span agent grpc server started ....");
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            for (Dispatcher dispatcher : dispatchers) {
+                dispatcher.close();
+            }
             LOGGER.info("shutting down gRPC server since JVM is shutting down");
             server.shutdown();
             LOGGER.info("span agent server shut down complete");
