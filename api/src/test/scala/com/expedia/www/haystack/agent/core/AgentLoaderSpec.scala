@@ -17,13 +17,74 @@
 
 package com.expedia.www.haystack.agent.core
 
-import org.scalatest.{FunSpec, Matchers}
+import java.util
+import java.util.ServiceConfigurationError
+
+import com.expedia.www.haystack.agent.core.config.{AgentConfig, Config}
+import com.expedia.www.haystack.agent.core.helpers.ReplacingClassLoader
+import org.scalatest.{Entry, FunSpec, Matchers}
 
 class AgentLoaderSpec extends FunSpec with Matchers {
 
+  private val configServiceFile = "META-INF/services/com.expedia.www.haystack.agent.core.config.ConfigReader"
+  private val agentServiceFile = "META-INF/services/com.expedia.www.haystack.agent.core.Agent"
+
   describe("Agent Loader") {
-    it("should load and initialize the agents") {
-      new AgentLoader()
+    it("should load the config spi") {
+      val cl = new ReplacingClassLoader(getClass.getClassLoader, configServiceFile, "configProvider.txt")
+      val cfg = new AgentLoader().loadConfig("file", cl)
+      cfg.getAgentConfigs.size() shouldBe 1
+      val agentConfig = cfg.getAgentConfigs.get(0)
+      agentConfig.getName shouldBe "spans"
+      agentConfig.getProps should contain (Entry("port", 8080))
+      agentConfig.getProps should contain (Entry("k1", "v1"))
+
+      agentConfig.getDispatchers.size() shouldBe 1
+      agentConfig.getDispatchers containsKey "kafka"
+    }
+
+    it("should fail to load the config spi with unknown name") {
+      val cl = new ReplacingClassLoader(getClass.getClassLoader, configServiceFile, "configProvider.txt")
+      val caught = intercept[ServiceConfigurationError] {
+        new AgentLoader().loadConfig("http", cl)
+      }
+      caught.getMessage shouldEqual "Fail to load the config provider for type = http"
+    }
+
+    it("should load and initialize the agent using the config object") {
+      val cl = new ReplacingClassLoader(getClass.getClassLoader, agentServiceFile, "singleAgentProvider.txt")
+
+      val cfg = new Config()
+      val agentConfig = new AgentConfig()
+      agentConfig.setName("spans")
+
+      val props = new util.HashMap[String, Object]()
+      props.put("port", new Integer(8080))
+      props.put("k1", "v1")
+      agentConfig.setProps(props)
+
+      val dispatchers = new util.HashMap[String, util.Map[String, Object]]()
+      val kafkaDispatcherCfg = new util.HashMap[String, Object]()
+      dispatchers.put("kafka", kafkaDispatcherCfg)
+      agentConfig.setDispatchers(dispatchers)
+
+      cfg.setAgentConfigs(util.Arrays.asList(agentConfig))
+
+      new AgentLoader().loadAgents(cfg, cl)
+    }
+
+    it("should fail to load the agent for unidentified name") {
+      val cl = new ReplacingClassLoader(getClass.getClassLoader, agentServiceFile, "singleAgentProvider.txt")
+
+      val cfg = new Config()
+      val agentConfig = new AgentConfig()
+      agentConfig.setName("blobs")
+      cfg.setAgentConfigs(util.Arrays.asList(agentConfig))
+
+      val caught = intercept[ServiceConfigurationError] {
+        new AgentLoader().loadAgents(cfg, cl)
+      }
+      caught.getMessage shouldEqual "Fail to load the agents with names=blobs,"
     }
   }
 }
