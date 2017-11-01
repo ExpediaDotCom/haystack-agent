@@ -61,7 +61,7 @@ public class KafkaSpanDispatcher implements Dispatcher {
         Validate.notNull(conf.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
         Validate.notNull(conf.get(PRODUCER_TOPIC));
 
-        // remove the producer topic from the configuration
+        // remove the producer topic from the configuration and use it during send() call
         topic = conf.remove(PRODUCER_TOPIC).toString();
 
         producer = new KafkaProducer<>(conf, new ByteArraySerializer(), new ByteArraySerializer());
