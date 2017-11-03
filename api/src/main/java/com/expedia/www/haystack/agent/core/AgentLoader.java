@@ -21,13 +21,13 @@ import com.expedia.www.haystack.agent.core.config.Config;
 import com.expedia.www.haystack.agent.core.config.ConfigReader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.function.BinaryOperator;
-import java.util.stream.Collectors;
+import java.util.Optional;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
+import java.util.Set;
 
 public class AgentLoader {
 

@@ -5,18 +5,22 @@ cd `dirname $0`/..
 
 DOCKER_ORG=expediadotcom
 DOCKER_IMAGE_NAME=haystack-agent
+DOCKER_IMAGE_TAG=$AGENT_JAR_VERSION
+
+echo "copying the haystack-agent-$AGENT_JAR_VERSION jar to haystack-agent.jar to simplify the docker build"
+cp agent/target/haystack-agent-${AGENT_JAR_VERSION}.jar agent/target/haystack-agent.jar
 
 docker build -t $(DOCKER_IMAGE_NAME) -f docker/Dockerfile .
 
 QUALIFIED_DOCKER_IMAGE_NAME=$DOCKER_ORG/$DOCKER_IMAGE_NAME
 echo "DOCKER_ORG=$DOCKER_ORG, DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME, QUALIFIED_DOCKER_IMAGE_NAME=$QUALIFIED_DOCKER_IMAGE_NAME"
-echo "BRANCH=$TRAVIS_BRANCH, TAG=$TRAVIS_TAG, SHA=$TRAVIS_COMMIT"
+echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG"
 
 # login
 docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
 # Add tags
-if [[ $TRAVIS_TAG =~ ([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+if [[ $DOCKER_IMAGE_TAG =~ ([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
     echo "pushing the released haystack agent to docker hub"
 
     unset MAJOR MINOR PATCH
@@ -32,12 +36,10 @@ if [[ $TRAVIS_TAG =~ ([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
 
     # publish image with tags
     docker push $QUALIFIED_DOCKER_IMAGE_NAME
-
-elif [[ "$TRAVIS_BRANCH" == "master" ]]; then
+else
     echo "pushing the snapshot version of haystack agent to docker hub"
 
-    # TODO: for 'master' branch, add SHA as tag for now, ideally it should be project version like 1.0.0-SNAPSHOT
-    docker tag $DOCKER_IMAGE_NAME $QUALIFIED_DOCKER_IMAGE_NAME:$TRAVIS_COMMIT
+    docker tag $DOCKER_IMAGE_NAME $QUALIFIED_DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
 
     # publish image with tags
     docker push $QUALIFIED_DOCKER_IMAGE_NAME

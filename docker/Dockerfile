@@ -6,7 +6,7 @@ ENV APP_HOME /app/bin
 
 RUN mkdir -p ${APP_HOME}
 
-COPY agent/target/${APP_NAME}-*SNAPSHOT.jar ${APP_HOME}/${APP_NAME}.jar
+COPY agent/target/${APP_NAME}.jar ${APP_HOME}/
 COPY docker/start-app.sh ${APP_HOME}/
 
 RUN chmod +x ${APP_HOME}/start-app.sh
