@@ -1,0 +1,10 @@
+agents:
+- name: "spans"
+  props:
+    port: 8080
+  dispatchers:
+    kafka:
+      bootstrap.servers: "kafkasvc:9200"
+      retries: 1
+      buffer.memory: 1048576  # 1 MB
+      producer.topic: "sometopic"
