@@ -25,7 +25,7 @@
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-kinesis-span-dispatcher</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.expedia.www</groupId>
