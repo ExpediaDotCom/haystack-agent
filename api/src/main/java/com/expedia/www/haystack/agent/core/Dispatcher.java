@@ -15,16 +15,35 @@
  *
  */
 
-package com.expedia.www.haystack.agent.core.dispatcher;
+package com.expedia.www.haystack.agent.core;
 
 import com.expedia.open.tracing.Span;
 
 import java.util.Map;
 
 public interface Dispatcher {
+    /**
+     * returns the unique name for this dispatcher
+     * @return
+     */
     String getName();
 
+    /**
+     * dispatch the span record to the sink
+     * @param record proto span record
+     * @throws Exception
+     */
     void dispatch(final Span record) throws Exception;
 
+
+    /**
+     * initializes the dispatcher for pushing span records to the sink
+     * @param conf
+     */
     void initialize(final Map<String, Object> conf);
+
+    /**
+     * close the dispatcher, this is called when the agent is shutting down.
+     */
+    void close();
 }

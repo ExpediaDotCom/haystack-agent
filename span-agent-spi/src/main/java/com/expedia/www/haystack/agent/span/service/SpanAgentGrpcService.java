@@ -20,7 +20,7 @@ package com.expedia.www.haystack.agent.span.service;
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.agent.api.DispatchResult;
 import com.expedia.open.tracing.agent.api.SpanAgentGrpc;
-import com.expedia.www.haystack.agent.core.dispatcher.Dispatcher;
+import com.expedia.www.haystack.agent.core.Dispatcher;
 import io.grpc.stub.StreamObserver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
