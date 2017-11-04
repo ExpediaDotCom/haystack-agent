@@ -1,4 +1,4 @@
-package com.expedia.www.haystack.agent.span.dispatcher.config;
+package com.expedia.www.haystack.agent.core.config;
 
 import java.util.Map;
 import java.util.Optional;

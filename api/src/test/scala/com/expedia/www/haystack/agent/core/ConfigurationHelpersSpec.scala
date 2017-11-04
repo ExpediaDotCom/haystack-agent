@@ -1,8 +1,9 @@
-package com.expedia.www.haystack.agent.span.dispatcher.config
+package com.expedia.www.haystack.agent.core
 
 import java.util
 import java.util.Optional
 
+import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers
 import org.scalatest.{FunSpec, Matchers}
 
 
