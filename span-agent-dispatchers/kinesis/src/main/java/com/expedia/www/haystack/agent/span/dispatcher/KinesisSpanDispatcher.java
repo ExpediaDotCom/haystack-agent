@@ -51,6 +51,16 @@ public class KinesisSpanDispatcher implements Dispatcher {
     }
 
 
+    @Override
+    public void close() {
+        LOGGER.info("Closing the kinesis span dispatcher now...");
+        if (producer != null) {
+            producer.flushSync();
+            producer.destroy();
+        }
+    }
+
+
     //Making these functions protected so that they can be tested
 
     protected String retrieveStreamName(Map<String, Object> conf) {
@@ -61,18 +71,12 @@ public class KinesisSpanDispatcher implements Dispatcher {
         return ConfigurationHelpers.getPropertyAsType(conf, OUTSTANDING_RECORD_LIMIT_KEY, Long.class, Optional.empty());
     }
 
-    @Override
-    public void close() {
-        LOGGER.info("Closing the kinesis span dispatcher now...");
-        if (producer != null) {
-            producer.flushSync();
-            producer.destroy();
-        }
-    }
 
     protected KinesisProducerConfiguration buildKinesisProducerConfiguration(Map<String, Object> conf) {
         return KinesisProducerConfiguration.fromProperties(ConfigurationHelpers.generatePropertiesFromMap(conf));
     }
+
+
 
 
 }
