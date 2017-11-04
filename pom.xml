@@ -9,11 +9,10 @@
 
     <modules>
         <module>api</module>
-        <module>file-config-spi</module>
-        <module>span-agent-spi</module>
-        <module>kafka-dispatcher-spi</module>
-        <module>agent</module>
-        <module>kinesis-span-dispatcher</module>
+        <module>config-providers/file</module>
+        <module>agent-providers/span</module>
+        <module>span-agent-dispatchers/kafka</module>
+        <module>bundlers/haystack-agent</module>
     </modules>
 
     <properties>

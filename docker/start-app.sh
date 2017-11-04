@@ -12,4 +12,4 @@ JAVA_OPTS="${JAVA_OPTS} \
 -Dapplication.name=${APP_NAME} \
 -Dapplication.home=${APP_HOME}"
 
-exec java ${JAVA_OPTS} -jar "${APP_HOME}/${APP_NAME}.jar"
+exec java ${JAVA_OPTS} -jar "${APP_HOME}/${APP_NAME}.jar" "$@"

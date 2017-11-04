@@ -7,7 +7,7 @@ import com.expedia.www.haystack.agent.core.config.{AgentConfig, Config, ConfigRe
 class TestFileConfigReader extends ConfigReader {
   override def getName: String = "file"
 
-  override def read(): Config = {
+  override def read(args: util.Map[String, String]): Config = {
     val cfg = new Config()
     val agentConfig = new AgentConfig()
     agentConfig.setName("spans")
