@@ -35,6 +35,6 @@ mvn clean package
 ####How to run locally?
 Edit dev-config.yaml and set the kafka endpoint correctly and then run
 ```
-java -DHAYSTACK_AGENT_CONFIG_FILE_PATH=dev-config.yaml -jar agent/target/haystack-agent-1.0-SNAPSHOT.jar 
+java -jar bundlers/haystack-agent/target/haystack-agent-0.1.0-SNAPSHOT.jar --config-provider file --file-path docker/dev-config.yaml
 ```
 This will spin up grpc server on port 8080

@@ -21,13 +21,11 @@ import com.expedia.www.haystack.agent.core.config.Config;
 import com.expedia.www.haystack.agent.core.config.ConfigReader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-import java.util.ServiceConfigurationError;
-import java.util.ServiceLoader;
-import java.util.Set;
+import java.util.*;
 
 public class AgentLoader {
 
@@ -35,9 +33,9 @@ public class AgentLoader {
 
     AgentLoader() { }
 
-    void run(String configProviderName) throws Exception {
+    void run(String configProviderName, final Map<String, String> configProviderArgs) throws Exception {
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        final Config config = loadConfig(configProviderName, cl);
+        final Config config = loadConfig(configProviderName, configProviderArgs, cl);
         loadAgents(config, cl);
     }
 
@@ -70,18 +68,38 @@ public class AgentLoader {
     }
 
     @VisibleForTesting
-    Config loadConfig(final String configProviderName, final ClassLoader cl) throws Exception {
+    Config loadConfig(final String configProviderName,
+                      final Map<String, String> configProviderArgs,
+                      final ClassLoader cl) throws Exception {
         final ServiceLoader<ConfigReader> configLoader = ServiceLoader.load(ConfigReader.class, cl);
         for (final ConfigReader reader : configLoader) {
             if (reader.getName().equalsIgnoreCase(configProviderName)) {
-                return reader.read();
+                return reader.read(configProviderArgs);
             }
         }
         throw new ServiceConfigurationError("Fail to load the config provider for type = " + configProviderName);
     }
 
+    @VisibleForTesting
+    static ImmutablePair<String, Map<String, String>> parseArgs(String[] args) {
+        final Map<String, String> configProviderArgs = new HashMap<>();
+        String configProviderName = "file";
+
+        if(args != null) {
+            for(int idx = 0; idx < args.length; idx = idx + 2) {
+                if(Objects.equals(args[idx], "--config-provider")) {
+                    configProviderName = args[idx + 1];
+                } else {
+                    configProviderArgs.put(args[idx], args[idx + 1]);
+                }
+            }
+        }
+
+        return ImmutablePair.of(configProviderName, configProviderArgs);
+    }
+
     public static void main(String[] args) throws Exception {
-        final String configProviderName = (args != null && args.length > 0) ? args[0] : "file";
-        new AgentLoader().run(configProviderName);
+        final ImmutablePair<String, Map<String, String>> configReader = parseArgs(args);
+        new AgentLoader().run(configReader.getKey(), configReader.getValue());
     }
 }

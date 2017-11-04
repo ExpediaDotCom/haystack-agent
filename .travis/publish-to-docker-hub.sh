@@ -8,7 +8,7 @@ DOCKER_IMAGE_NAME=haystack-agent
 DOCKER_IMAGE_TAG=$AGENT_JAR_VERSION
 
 echo "copying the haystack-agent-$AGENT_JAR_VERSION jar to haystack-agent.jar to simplify the docker build"
-cp agent/target/haystack-agent-${AGENT_JAR_VERSION}.jar agent/target/haystack-agent.jar
+cp bundlers/haystack-agent/target/haystack-agent-${AGENT_JAR_VERSION}.jar bundlers/haystack-agent/target/haystack-agent.jar
 
 docker build -t $DOCKER_IMAGE_NAME -f docker/Dockerfile .
 
