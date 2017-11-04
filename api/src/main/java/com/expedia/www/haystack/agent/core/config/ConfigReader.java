@@ -17,6 +17,8 @@
 
 package com.expedia.www.haystack.agent.core.config;
 
+import java.util.Map;
+
 public interface ConfigReader {
     /**
      * returns the unique name of this config reader, for e.g. 'file' if loading configuration
@@ -27,8 +29,9 @@ public interface ConfigReader {
 
     /**
      * loads the config and returns the agent config object
-     * @return Config object
+     * @param args args required by the config reader, for e.g. file based configReader expects filePath
+     * @return a config object
      * @throws Exception
      */
-    Config read() throws Exception;
+    Config read(final Map<String, String> args) throws Exception;
 }

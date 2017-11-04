@@ -32,7 +32,7 @@ class AgentLoaderSpec extends FunSpec with Matchers {
   describe("Agent Loader") {
     it("should load the config spi") {
       val cl = new ReplacingClassLoader(getClass.getClassLoader, configServiceFile, "configProvider.txt")
-      val cfg = new AgentLoader().loadConfig("file", cl)
+      val cfg = new AgentLoader().loadConfig("file", new util.HashMap[String, String], cl)
       cfg.getAgentConfigs.size() shouldBe 1
       val agentConfig = cfg.getAgentConfigs.get(0)
       agentConfig.getName shouldBe "spans"
@@ -46,7 +46,7 @@ class AgentLoaderSpec extends FunSpec with Matchers {
     it("should fail to load the config spi with unknown name") {
       val cl = new ReplacingClassLoader(getClass.getClassLoader, configServiceFile, "configProvider.txt")
       val caught = intercept[ServiceConfigurationError] {
-        new AgentLoader().loadConfig("http", cl)
+        new AgentLoader().loadConfig("http", new util.HashMap[String, String], cl)
       }
       caught.getMessage shouldEqual "Fail to load the config provider for type = http"
     }
@@ -85,6 +85,19 @@ class AgentLoaderSpec extends FunSpec with Matchers {
         new AgentLoader().loadAgents(cfg, cl)
       }
       caught.getMessage shouldEqual "Fail to load the agents with names=blobs,"
+    }
+
+    it("should parse the null config reader args") {
+      val result = AgentLoader.parseArgs(null)
+      result.getKey shouldEqual "file"
+      result.getValue shouldBe 'empty
+    }
+
+    it("should parse config reader args for file based reader") {
+      val args = Array("--config-provider", "file", "--file-path", "/tmp/config.yaml")
+      val result = AgentLoader.parseArgs(args)
+      result.getKey shouldEqual "file"
+      result.getValue should contain (Entry("--file-path", "/tmp/config.yaml"))
     }
   }
 }

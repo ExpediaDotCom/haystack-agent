@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>haystack-kafka-dispatcher-spi</artifactId>
+    <artifactId>haystack-agent-file-config-provider</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 
     <parent>
@@ -13,20 +13,17 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.11</artifactId>
-            <version>0.10.2.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-agent-api</artifactId>
             <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
     </dependencies>
 
@@ -35,13 +32,17 @@
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
-                <version>1.0</version>
                 <executions>
                     <execution>
                         <id>test</id>
                         <goals>
                             <goal>test</goal>
                         </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <HAYSTACK_AGENT_CONFIG_FILE_PATH>src/test/resources/config.yaml</HAYSTACK_AGENT_CONFIG_FILE_PATH>
+                            </environmentVariables>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

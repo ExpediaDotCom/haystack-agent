@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * loads the config for all agents from file. It uses system property, environment variable and default config file
@@ -34,7 +35,6 @@ import java.io.File;
 public class FileConfigReader implements ConfigReader {
     private final static Logger LOGGER = LoggerFactory.getLogger(FileConfigReader.class);
 
-    private final static String DEFAULT_CONFIG_FILE_PATH = "agent-config.yaml";
     private final static String HAYSTACK_AGENT_CONFIG_FILE_PATH = "HAYSTACK_AGENT_CONFIG_FILE_PATH";
 
     @Override
@@ -43,22 +43,25 @@ public class FileConfigReader implements ConfigReader {
     }
 
     @Override
-    public Config read() throws Exception {
+    public Config read(final Map<String, String> args) throws Exception {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-        // fallback to the default config path
-        String configFilePath = System.getProperty(HAYSTACK_AGENT_CONFIG_FILE_PATH);
-        if (StringUtils.isEmpty(configFilePath)) {
-            configFilePath = System.getenv(HAYSTACK_AGENT_CONFIG_FILE_PATH);
+        String configFilePath = args.get("--file-path");
+        if(StringUtils.isEmpty(configFilePath)) {
+            configFilePath = System.getProperty(HAYSTACK_AGENT_CONFIG_FILE_PATH);
             if (StringUtils.isEmpty(configFilePath)) {
-                LOGGER.info("Neither system property nor environment variable is found for haystack agent config file, falling to default file path={}", configFilePath);
-                configFilePath = DEFAULT_CONFIG_FILE_PATH;
+                configFilePath = System.getenv(HAYSTACK_AGENT_CONFIG_FILE_PATH);
+                if (StringUtils.isEmpty(configFilePath)) {
+                    LOGGER.info("Neither system property nor environment variable is found for haystack agent config file, falling to default file path={}", configFilePath);
+                    throw new RuntimeException("Fail to find a valid config file path");
+                } else {
+                    LOGGER.info("Environment variable for haystack agent config file path found with value={}", configFilePath);
+                }
             } else {
-                LOGGER.info("Environment variable for haystack agent config file path found with value={}", configFilePath);
+                LOGGER.info("System property for haystack agent config file path found with value={}", configFilePath);
             }
-        } else {
-            LOGGER.info("System property for haystack agent config file path found with value={}", configFilePath);
         }
+
         return mapper.readValue(new File(configFilePath), Config.class);
     }
 }
