@@ -7,6 +7,7 @@ import com.amazonaws.services.kinesis.producer.UserRecordResult;
 import com.expedia.open.tracing.Span;
 import com.expedia.www.haystack.agent.core.Dispatcher;
 import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -103,20 +104,21 @@ public class KinesisSpanDispatcher implements Dispatcher {
 
 
     //Making these functions protected so that they can be tested
-    protected String retrieveStreamName(Map<String, Object> conf) {
+    @VisibleForTesting
+    String retrieveStreamName(Map<String, Object> conf) {
         String streamName = ConfigurationHelpers.getPropertyAsType(conf, STREAM_NAME_KEY, String.class, Optional.empty());
         conf.remove(STREAM_NAME_KEY);
         return streamName;
     }
-
-    protected Long retrieveOutstandingRecordsLimitKey(Map<String, Object> conf) {
+    @VisibleForTesting
+    Long retrieveOutstandingRecordsLimitKey(Map<String, Object> conf) {
         Long outstandingRecord = ConfigurationHelpers.getPropertyAsType(conf, OUTSTANDING_RECORD_LIMIT_KEY, Long.class, Optional.empty());
         conf.remove(OUTSTANDING_RECORD_LIMIT_KEY);
         return outstandingRecord;
     }
 
-
-    protected KinesisProducerConfiguration buildKinesisProducerConfiguration(Map<String, Object> conf) {
+    @VisibleForTesting
+    KinesisProducerConfiguration buildKinesisProducerConfiguration(Map<String, Object> conf) {
         return KinesisProducerConfiguration.fromProperties(ConfigurationHelpers.generatePropertiesFromMap(conf));
     }
 
