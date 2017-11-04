@@ -29,7 +29,7 @@
         </dependency>
         <dependency>
             <groupId>com.expedia.www</groupId>
-            <artifactId>haystack-agent-kafka-dispatcher</artifactId>
+            <artifactId>haystack-span-agent-kafka-dispatcher</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
