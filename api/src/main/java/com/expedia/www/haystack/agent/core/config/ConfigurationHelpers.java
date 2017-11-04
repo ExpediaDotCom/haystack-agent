@@ -21,12 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
-/**
- * This dispatcher class is responsible to dispatch the records to Kinesis-Stream.
- */
 public class ConfigurationHelpers {
-
-
     public static <T> T getPropertyAsType(Map<String, Object> properties, final String propertyName, Class<T> type, final Optional<T> defaultValue) {
         Object value = System.getProperty(propertyName);
         if (value == null) {
@@ -66,5 +61,4 @@ public class ConfigurationHelpers {
         properties.putAll(config);
         return properties;
     }
-
 }

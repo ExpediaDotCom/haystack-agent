@@ -28,57 +28,59 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class KinesisSpanDispatcher implements Dispatcher {
+    private static Logger LOGGER = LoggerFactory.getLogger(KinesisSpanDispatcher.class);
 
-    public static final String STREAM_NAME_KEY = "StreamName";
-    public static final String OUTSTANDING_RECORD_LIMIT_KEY = "OutstandingRecordsLimit";
+    private static final String STREAM_NAME_KEY = "StreamName";
+    private static final String OUTSTANDING_RECORD_LIMIT_KEY = "OutstandingRecordsLimit";
 
-    private final String dispatcherName = "kinesis";
     private KinesisProducer producer;
-
     private String streamName;
-    protected Long outstandingRecordsLimit;
-
-    private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
-
+    private Long outstandingRecordsLimit;
 
     @Override
     public String getName() {
-        return dispatcherName;
+        return "kinesis";
     }
 
     @Override
-    public void dispatch(Span record) throws Exception {
+    public void dispatch(final Span record) throws Exception {
         if (producer.getOutstandingRecordsCount() > outstandingRecordsLimit) {
-            throw new RuntimeException(String.format("excessive number of outstanding records: %d", producer.getOutstandingRecordsCount()));
+            throw new RuntimeException(String.format("excessive number of outstanding records: %d",
+                    producer.getOutstandingRecordsCount()));
         } else {
-            ListenableFuture<UserRecordResult> response = producer.addUserRecord(streamName,
+            final ListenableFuture<UserRecordResult> response = producer.addUserRecord(streamName,
                     record.getTraceId(),
                     ByteBuffer.wrap(record.toByteArray()));
+
             Futures.addCallback(response, new FutureCallback<UserRecordResult>() {
                 @Override
-                public void onSuccess(UserRecordResult result) {
-                    //TODO : Add a performance counter for put success
+                public void onSuccess(final UserRecordResult result) {
+                    if(!result.isSuccessful()) {
+                        LOGGER.error("Fail to put the span record to kinesis after total attempts={}",
+                                result.getAttempts() != null ? result.getAttempts().size() : 0);
+                    }
                 }
 
                 @Override
-                public void onFailure(Throwable throwable) {
+                public void onFailure(final Throwable throwable) {
                     if (throwable instanceof UserRecordFailedException) {
-                        UserRecordFailedException e =
+                        final UserRecordFailedException e =
                                 (UserRecordFailedException) throwable;
-                        UserRecordResult result = e.getResult();
+                        final UserRecordResult result = e.getResult();
 
-                        String errorList =
-                                StringUtils.join(result.getAttempts().stream()
+                        final String errorList = StringUtils.join(
+                                result.getAttempts()
+                                        .stream()
                                         .map(a -> String.format(
                                                 "Delay after prev attempt: %d ms, "
                                                         + "Duration: %d ms, Code: %s, "
@@ -86,25 +88,25 @@ public class KinesisSpanDispatcher implements Dispatcher {
                                                 a.getDelay(), a.getDuration(),
                                                 a.getErrorCode(),
                                                 a.getErrorMessage()))
-                                        .collect(Collectors.toList()), "n");
+                                        .collect(Collectors.toList()), "\n");
 
-                        LOGGER.error(String.format(
-                                "Record failed to put payload=%s, attempts:n%s",
-                                Arrays.toString(record.toByteArray()), errorList));
+                        LOGGER.error("Record failed to put span record to kinesis with attempts={}", errorList);
                     }
                 }
-
-                ;
             });
         }
-
     }
 
     @Override
-    public void initialize(Map<String, Object> conf) {
+    public void initialize(final Map<String, Object> conf) {
+        streamName = getAndRemoveStreamNameKey(conf);
+        outstandingRecordsLimit = getAndRemoveOutstandingRecordLimitKey(conf);
+
+        Validate.notNull(streamName);
+        Validate.notNull(outstandingRecordsLimit);
+        Validate.notNull(conf.get("Region"));
+
         producer = new KinesisProducer(buildKinesisProducerConfiguration(conf));
-        streamName = retrieveStreamName(conf);
-        outstandingRecordsLimit = retrieveOutstandingRecordsLimitKey(conf);
         LOGGER.info("Successfully initialized the kinesis span dispatcher");
     }
 
@@ -121,22 +123,21 @@ public class KinesisSpanDispatcher implements Dispatcher {
 
     //Making these functions protected so that they can be tested
     @VisibleForTesting
-    String retrieveStreamName(Map<String, Object> conf) {
-        String streamName = ConfigurationHelpers.getPropertyAsType(conf, STREAM_NAME_KEY, String.class, Optional.empty());
+    String getAndRemoveStreamNameKey(final Map<String, Object> conf) {
+        final String streamName = ConfigurationHelpers.getPropertyAsType(conf, STREAM_NAME_KEY, String.class, Optional.empty());
         conf.remove(STREAM_NAME_KEY);
         return streamName;
     }
+
     @VisibleForTesting
-    Long retrieveOutstandingRecordsLimitKey(Map<String, Object> conf) {
-        Long outstandingRecord = ConfigurationHelpers.getPropertyAsType(conf, OUTSTANDING_RECORD_LIMIT_KEY, Long.class, Optional.empty());
+    Long getAndRemoveOutstandingRecordLimitKey(final Map<String, Object> conf) {
+        final Long outstandingRecord = ConfigurationHelpers.getPropertyAsType(conf, OUTSTANDING_RECORD_LIMIT_KEY, Long.class, Optional.empty());
         conf.remove(OUTSTANDING_RECORD_LIMIT_KEY);
         return outstandingRecord;
     }
 
     @VisibleForTesting
-    KinesisProducerConfiguration buildKinesisProducerConfiguration(Map<String, Object> conf) {
+    KinesisProducerConfiguration buildKinesisProducerConfiguration(final Map<String, Object> conf) {
         return KinesisProducerConfiguration.fromProperties(ConfigurationHelpers.generatePropertiesFromMap(conf));
     }
-
-
 }

@@ -60,8 +60,8 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers {
 
       val kinesisSpanDispatcher = new KinesisSpanDispatcher()
 
-      kinesisSpanDispatcher.retrieveStreamName(props) shouldEqual streamName
-      kinesisSpanDispatcher.retrieveOutstandingRecordsLimitKey(props) shouldEqual outstandingRecordsLimit
+      kinesisSpanDispatcher.getAndRemoveStreamNameKey(props) shouldEqual streamName
+      kinesisSpanDispatcher.getAndRemoveOutstandingRecordLimitKey(props) shouldEqual outstandingRecordsLimit
     }
 
     it("should be able to build the kinesis producer configuration using the same keys as in the config passed") {
