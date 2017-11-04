@@ -12,6 +12,7 @@
         <module>config-providers/file</module>
         <module>agent-providers/span</module>
         <module>span-agent-dispatchers/kafka</module>
+        <module>span-agent-dispatchers/kinesis</module>
         <module>bundlers/haystack-agent</module>
     </modules>
 
