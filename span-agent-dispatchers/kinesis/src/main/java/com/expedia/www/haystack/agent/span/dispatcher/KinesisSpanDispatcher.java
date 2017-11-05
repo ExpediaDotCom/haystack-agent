@@ -16,13 +16,13 @@
  */
 package com.expedia.www.haystack.agent.span.dispatcher;
 
-import com.amazonaws.services.kinesis.producer.KinesisProducer;
-import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration;
-import com.amazonaws.services.kinesis.producer.UserRecordFailedException;
-import com.amazonaws.services.kinesis.producer.UserRecordResult;
+import com.amazonaws.services.kinesis.producer.*;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.expedia.open.tracing.Span;
 import com.expedia.www.haystack.agent.core.Dispatcher;
 import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
+import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -33,15 +33,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class KinesisSpanDispatcher implements Dispatcher {
-    private static Logger LOGGER = LoggerFactory.getLogger(KinesisSpanDispatcher.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(KinesisSpanDispatcher.class);
 
     private static final String STREAM_NAME_KEY = "StreamName";
     private static final String OUTSTANDING_RECORD_LIMIT_KEY = "OutstandingRecordsLimit";
+
+    private final Timer dispatchTimer = SharedMetricRegistry.newTimer("kinesis.dispatch.timer");
+    private final Meter dispatchFailureMeter = SharedMetricRegistry.newMeter("kinesis.dispatch.failure");
+    private final Meter outstandingRecordsError = SharedMetricRegistry.newMeter("kinesis.dispatch.outstanding.records.error");
 
     private KinesisProducer producer;
     private String streamName;
@@ -55,45 +60,15 @@ public class KinesisSpanDispatcher implements Dispatcher {
     @Override
     public void dispatch(final Span record) throws Exception {
         if (producer.getOutstandingRecordsCount() > outstandingRecordsLimit) {
+            outstandingRecordsError.mark();
             throw new RuntimeException(String.format("excessive number of outstanding records: %d",
                     producer.getOutstandingRecordsCount()));
         } else {
+            final Timer.Context timer = dispatchTimer.time();
             final ListenableFuture<UserRecordResult> response = producer.addUserRecord(streamName,
                     record.getTraceId(),
                     ByteBuffer.wrap(record.toByteArray()));
-
-            Futures.addCallback(response, new FutureCallback<UserRecordResult>() {
-                @Override
-                public void onSuccess(final UserRecordResult result) {
-                    if(!result.isSuccessful()) {
-                        LOGGER.error("Fail to put the span record to kinesis after total attempts={}",
-                                result.getAttempts() != null ? result.getAttempts().size() : 0);
-                    }
-                }
-
-                @Override
-                public void onFailure(final Throwable throwable) {
-                    if (throwable instanceof UserRecordFailedException) {
-                        final UserRecordFailedException e =
-                                (UserRecordFailedException) throwable;
-                        final UserRecordResult result = e.getResult();
-
-                        final String errorList = StringUtils.join(
-                                result.getAttempts()
-                                        .stream()
-                                        .map(a -> String.format(
-                                                "Delay after prev attempt: %d ms, "
-                                                        + "Duration: %d ms, Code: %s, "
-                                                        + "Message: %s",
-                                                a.getDelay(), a.getDuration(),
-                                                a.getErrorCode(),
-                                                a.getErrorMessage()))
-                                        .collect(Collectors.toList()), "\n");
-
-                        LOGGER.error("Record failed to put span record to kinesis with attempts={}", errorList);
-                    }
-                }
-            });
+            handleAsyncResponse(response, timer);
         }
     }
 
@@ -139,5 +114,50 @@ public class KinesisSpanDispatcher implements Dispatcher {
     @VisibleForTesting
     KinesisProducerConfiguration buildKinesisProducerConfiguration(final Map<String, Object> conf) {
         return KinesisProducerConfiguration.fromProperties(ConfigurationHelpers.generatePropertiesFromMap(conf));
+    }
+
+    private void handleAsyncResponse(final ListenableFuture<UserRecordResult> response, final Timer.Context timer) {
+        Futures.addCallback(response, new FutureCallback<UserRecordResult>() {
+            @Override
+            public void onSuccess(final UserRecordResult result) {
+                timer.close();
+                if(!result.isSuccessful()) {
+                    dispatchFailureMeter.mark();
+                    LOGGER.error("Fail to put the span record to kinesis after attempts={}",
+                            formatAttempts(result.getAttempts()));
+                }
+            }
+
+            @Override
+            public void onFailure(final Throwable throwable) {
+                timer.close();
+                dispatchFailureMeter.mark();
+
+                if (throwable instanceof UserRecordFailedException) {
+                    final UserRecordFailedException e = (UserRecordFailedException) throwable;
+                    final UserRecordResult result = e.getResult();
+                    LOGGER.error("Record failed to put span record to kinesis with attempts={}",
+                            formatAttempts(result.getAttempts()), e);
+                }
+            }
+        });
+    }
+
+    private String formatAttempts(final List<Attempt> attempts) {
+        if (attempts != null) {
+            final List<String> attemptStr = attempts
+                    .stream()
+                    .map(a -> String.format(
+                            "Delay after prev attempt: %d ms, "
+                                    + "Duration: %d ms, Code: %s, "
+                                    + "Message: %s",
+                            a.getDelay(), a.getDuration(),
+                            a.getErrorCode(),
+                            a.getErrorMessage()))
+                    .collect(Collectors.toList());
+            return StringUtils.join(attemptStr, "\n");
+        } else {
+            return "0";
+        }
     }
 }

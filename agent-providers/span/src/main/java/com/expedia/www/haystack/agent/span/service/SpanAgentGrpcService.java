@@ -17,10 +17,13 @@
 
 package com.expedia.www.haystack.agent.span.service;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.agent.api.DispatchResult;
 import com.expedia.open.tracing.agent.api.SpanAgentGrpc;
 import com.expedia.www.haystack.agent.core.Dispatcher;
+import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import io.grpc.stub.StreamObserver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -34,6 +37,8 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
     private final Logger LOGGER = LoggerFactory.getLogger(SpanAgentGrpcService.class);
 
     private final List<Dispatcher> dispatchers;
+    private final Timer dispatchTimer = SharedMetricRegistry.newTimer("span.agent.dispatch.timer");
+    private final Meter dispatchFailureMeter = SharedMetricRegistry.newMeter("span.agent.dispatch.failures");
 
     public SpanAgentGrpcService(final List<Dispatcher> dispatchers) {
         Validate.notEmpty(dispatchers);
@@ -41,14 +46,17 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
     }
 
     @Override
-    public void dispatch(Span record, StreamObserver<DispatchResult> responseObserver) {
+    public void dispatch(final Span record, final StreamObserver<DispatchResult> responseObserver) {
         final DispatchResult.Builder result = DispatchResult.newBuilder().setCode(DispatchResult.ResultCode.SUCCESS);
         final StringBuilder failedDispatchers = new StringBuilder();
 
-        for(Dispatcher d : dispatchers) {
+        final Timer.Context timer = dispatchTimer.time();
+
+        for(final Dispatcher d : dispatchers) {
             try {
                 d.dispatch(record);
             } catch (Exception ex) {
+                dispatchFailureMeter.mark();
                 LOGGER.error("Fail to dispatch the span record to the dispatcher with name={}", d.getName(), ex);
                 failedDispatchers.append(d.getName()).append(",");
             }
@@ -59,6 +67,8 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
             result.setErrorMessage("Fail to dispatch the span record to the dispatchers=" +
                     StringUtils.removeEnd(failedDispatchers.toString(), ","));
         }
+
+        timer.close();
 
         responseObserver.onNext(result.build());
         responseObserver.onCompleted();

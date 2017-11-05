@@ -17,8 +17,11 @@
 
 package com.expedia.www.haystack.agent.span.dipatcher.spi;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.expedia.open.tracing.Span;
 import com.expedia.www.haystack.agent.core.Dispatcher;
+import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -31,9 +34,11 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class KafkaSpanDispatcher implements Dispatcher {
-    private static Logger LOGGER = LoggerFactory.getLogger(KafkaSpanDispatcher.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(KafkaSpanDispatcher.class);
 
     private final static String PRODUCER_TOPIC = "producer.topic";
+    private final Timer dispatchTimer = SharedMetricRegistry.newTimer("kafka.dispatch.timer");
+    private final Meter dispatchFailure = SharedMetricRegistry.newMeter("kafka.dispatch.failure");
 
     private KafkaProducer<byte[], byte[]> producer;
     private String topic;
@@ -45,12 +50,15 @@ public class KafkaSpanDispatcher implements Dispatcher {
 
     @Override
     public void dispatch(final Span record) throws Exception {
+        final Timer.Context timer = dispatchTimer.time();
         final ProducerRecord<byte[], byte[]> rec = new ProducerRecord<>(
                 topic,
                 record.getTraceId().getBytes(),
                 record.toByteArray());
         producer.send(rec, (metadata, exception) -> {
+            timer.close();
             if(exception != null) {
+                dispatchFailure.mark();
                 LOGGER.error("Fail to produce the span to kafka with exception", exception);
             }
         });
@@ -63,7 +71,6 @@ public class KafkaSpanDispatcher implements Dispatcher {
 
         // remove the producer topic from the configuration and use it during send() call
         topic = conf.remove(PRODUCER_TOPIC).toString();
-
         producer = new KafkaProducer<>(conf, new ByteArraySerializer(), new ByteArraySerializer());
     }
 

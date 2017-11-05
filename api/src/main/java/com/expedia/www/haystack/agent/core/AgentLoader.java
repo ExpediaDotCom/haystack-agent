@@ -19,6 +19,7 @@ package com.expedia.www.haystack.agent.core;
 import com.expedia.www.haystack.agent.core.config.AgentConfig;
 import com.expedia.www.haystack.agent.core.config.Config;
 import com.expedia.www.haystack.agent.core.config.ConfigReader;
+import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -34,6 +35,8 @@ public class AgentLoader {
     AgentLoader() { }
 
     void run(String configProviderName, final Map<String, String> configProviderArgs) throws Exception {
+        SharedMetricRegistry.startJmxMetricReporter();
+
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         final Config config = loadConfig(configProviderName, configProviderArgs, cl);
         loadAgents(config, cl);

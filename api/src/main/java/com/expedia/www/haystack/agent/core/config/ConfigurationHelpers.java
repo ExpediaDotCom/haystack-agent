@@ -23,9 +23,9 @@ import java.util.Properties;
 
 public class ConfigurationHelpers {
     public static <T> T getPropertyAsType(Map<String, Object> properties, final String propertyName, Class<T> type, final Optional<T> defaultValue) {
-        Object value = System.getProperty(propertyName);
+        Object value = properties.get(propertyName);
         if (value == null) {
-            value = properties.get(propertyName);
+            value = System.getProperty(propertyName);
             if (value == null) {
                 if (defaultValue.isPresent()) {
                     return defaultValue.get();
