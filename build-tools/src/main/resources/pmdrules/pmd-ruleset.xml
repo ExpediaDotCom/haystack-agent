@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+
+<ruleset name="Favorites" xmlns="http://pmd.sf.net/ruleset/1.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0 http://pmd.sf.net/ruleset_xml_schema.xsd"
+         xsi:noNamespaceSchemaLocation="http://pmd.sf.net/ruleset_xml_schema.xsd">
+
+    <description>
+        The Favorites ruleset contains links to rules that I like to use.  Usually I
+        combine this ruleset with the unusedcode.xml, basic.xml, and import.xml rulesets for my projects.
+        This ruleset also serves as an example of how to do a custom ruleset.
+    </description>
+
+    <rule ref="rulesets/java/basic.xml">
+        <exclude name="CollapsibleIfStatements" />
+        <exclude name="AvoidUsingHardCodedIP" />
+    </rule>
+
+    <rule ref="rulesets/java/braces.xml" />
+
+    <rule ref="rulesets/java/codesize.xml">
+        <exclude name="ExcessiveParameterList" />
+        <exclude name="TooManyMethods" />
+    </rule>
+
+    <rule ref="rulesets/java/codesize.xml/CyclomaticComplexity">
+        <properties>
+            <property name="reportLevel" value="10" />
+        </properties>
+    </rule>
+    <rule ref="rulesets/java/codesize.xml/TooManyFields">
+        <properties>
+            <property name="maxfields" value="20" />
+        </properties>
+    </rule>
+
+    <rule ref="rulesets/java/controversial.xml/UnnecessaryConstructor" />
+    <rule ref="rulesets/java/controversial.xml/AssignmentInOperand" />
+
+    <rule ref="rulesets/java/controversial.xml/UnnecessaryParentheses" />
+    <rule
+            ref="rulesets/java/controversial.xml/DoNotCallGarbageCollectionExplicitly" />
+    <rule ref="rulesets/java/controversial.xml/OneDeclarationPerLine" />
+
+    <rule ref="rulesets/java/design.xml">
+        <exclude name="ClassWithOnlyPrivateConstructorsShouldBeFinal" />
+        <exclude name="EmptyMethodInAbstractClassShouldBeAbstract" />
+        <exclude name="FieldDeclarationsShouldBeAtStartOfClass" />
+        <exclude name="CompareObjectsWithEquals" />
+        <exclude name="GodClass" />
+        <exclude name="UnnecessaryLocalBeforeReturn" />
+        <exclude name="ImmutableField" />
+        <exclude name="ConfusingTernary" />
+        <exclude name="UncommentedEmptyMethod" />
+        <exclude name="UncommentedEmptyConstructor" />
+        <exclude name="AvoidDeeplyNestedIfStmts" />
+        <exclude name="PreserveStackTrace" />
+        <exclude name="UseLocaleWithCaseConversions" />
+    </rule>
+
+    <rule ref="rulesets/java/finalizers.xml" />
+
+    <rule ref="rulesets/java/imports.xml">
+        <exclude name="TooManyStaticImports" />
+        <exclude name="UnnecessaryFullyQualifiedName" />
+    </rule>
+
+    <rule ref="rulesets/java/javabeans.xml/MissingSerialVersionUID" />
+
+    <rule ref="rulesets/java/logging-java.xml/SystemPrintln" />
+    <rule ref="rulesets/java/logging-java.xml/AvoidPrintStackTrace" />
+
+    <rule ref="rulesets/java/migrating.xml">
+        <exclude name="JUnit4TestShouldUseBeforeAnnotation" />
+        <exclude name="JUnit4TestShouldUseAfterAnnotation" />
+        <exclude name="JUnit4TestShouldUseTestAnnotation" />
+        <exclude name="JUnit4SuitesShouldUseSuiteAnnotation" />
+        <exclude name="JUnitUseExpected" />
+    </rule>
+
+    <rule ref="rulesets/java/optimizations.xml">
+        <exclude name="MethodArgumentCouldBeFinal" />
+        <exclude name="LocalVariableCouldBeFinal" />
+        <exclude name="AvoidInstantiatingObjectsInLoops" />
+    </rule>
+
+    <rule ref="rulesets/java/strictexception.xml">
+        <exclude name="SignatureDeclareThrowsException" />
+        <exclude name="AvoidCatchingGenericException" />
+        <exclude name="AvoidThrowingRawExceptionTypes" />
+    </rule>
+
+    <rule ref="rulesets/java/strings.xml">
+        <exclude name="AvoidDuplicateLiterals" />
+        <exclude name="InsufficientStringBufferDeclaration" />
+        <exclude name="AvoidStringBufferField" />
+        <exclude name="ConsecutiveAppendsShouldReuse" />
+    </rule>
+
+    <rule ref="rulesets/java/typeresolution.xml">
+        <exclude name="SignatureDeclareThrowsException" />
+    </rule>
+
+    <rule ref="rulesets/java/unusedcode.xml" />
+
+</ruleset>

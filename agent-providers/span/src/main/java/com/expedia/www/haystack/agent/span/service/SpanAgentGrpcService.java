@@ -41,7 +41,7 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
     private final Meter dispatchFailureMeter = SharedMetricRegistry.newMeter("span.agent.dispatch.failures");
 
     public SpanAgentGrpcService(final List<Dispatcher> dispatchers) {
-        Validate.notEmpty(dispatchers);
+        Validate.notEmpty(dispatchers, "Dispatchers can't be empty");
         this.dispatchers = dispatchers;
     }
 
@@ -58,7 +58,7 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
             } catch (Exception ex) {
                 dispatchFailureMeter.mark();
                 LOGGER.error("Fail to dispatch the span record to the dispatcher with name={}", d.getName(), ex);
-                failedDispatchers.append(d.getName()).append(",");
+                failedDispatchers.append(d.getName()).append(',');
             }
         }
 

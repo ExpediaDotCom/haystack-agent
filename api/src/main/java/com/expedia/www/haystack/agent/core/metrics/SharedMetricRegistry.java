@@ -21,16 +21,21 @@ import com.codahale.metrics.*;
 
 public class SharedMetricRegistry {
     private final static String MetricRegistryName = "HAYSTACK_AGENT_METRIC_REGISTRY";
+    private final static Object lock = new Object();
 
-    private static JmxReporter reporter = null;
+    private static JmxReporter reporter;
+
+    private SharedMetricRegistry() { /* suppress pmd violation */ }
 
     /**
      * start the jmx reporter for shared metric registry
      */
-    public synchronized static void startJmxMetricReporter() {
-        if(reporter == null) {
-            reporter = JmxReporter.forRegistry(get()).build();
-            reporter.start();
+    public static void startJmxMetricReporter() {
+        synchronized (lock) {
+            if (reporter == null) {
+                reporter = JmxReporter.forRegistry(get()).build();
+                reporter.start();
+            }
         }
     }
 
@@ -38,10 +43,12 @@ public class SharedMetricRegistry {
      * close the jmx reporter for shared metric registry.
      * The agent should close the jmx reporter
      */
-    public synchronized static void closeJmxMetricReporter() {
-        if (reporter != null) {
-            reporter.close();
-            reporter = null;
+    public static void closeJmxMetricReporter() {
+        synchronized (lock) {
+            if (reporter != null) {
+                reporter.close();
+                reporter = null;
+            }
         }
     }
 

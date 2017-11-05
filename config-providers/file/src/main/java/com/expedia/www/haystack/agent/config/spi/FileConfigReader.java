@@ -44,8 +44,6 @@ public class FileConfigReader implements ConfigReader {
 
     @Override
     public Config read(final Map<String, String> args) throws Exception {
-        final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
         String configFilePath = args.get("--file-path");
         if(StringUtils.isEmpty(configFilePath)) {
             configFilePath = System.getProperty(HAYSTACK_AGENT_CONFIG_FILE_PATH);
@@ -62,6 +60,6 @@ public class FileConfigReader implements ConfigReader {
             }
         }
 
-        return mapper.readValue(new File(configFilePath), Config.class);
+        return new ObjectMapper(new YAMLFactory()).readValue(new File(configFilePath), Config.class);
     }
 }

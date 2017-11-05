@@ -22,18 +22,17 @@ import java.util.Optional;
 import java.util.Properties;
 
 public class ConfigurationHelpers {
+    private ConfigurationHelpers() { /* suppress pmd violation */ }
+
     public static <T> T getPropertyAsType(Map<String, Object> properties, final String propertyName, Class<T> type, final Optional<T> defaultValue) {
         Object value = properties.get(propertyName);
         if (value == null) {
-            value = System.getProperty(propertyName);
-            if (value == null) {
-                if (defaultValue.isPresent()) {
-                    return defaultValue.get();
-                } else {
-                    throw new IllegalArgumentException(String.format("Could not find key for %s in configuration", propertyName));
-                }
-
+            if (defaultValue.isPresent()) {
+                return defaultValue.get();
+            } else {
+                throw new IllegalArgumentException(String.format("Could not find key for %s in configuration", propertyName));
             }
+
         }
 
         if (type.isAssignableFrom(value.getClass())) {
@@ -53,11 +52,10 @@ public class ConfigurationHelpers {
             }
         }
         throw new IllegalArgumentException(String.format("%s key in configuration can't be cast to type %s", propertyName, type.getSimpleName()));
-
     }
 
     public static Properties generatePropertiesFromMap(Map<String, Object> config) {
-        Properties properties = new Properties();
+        final Properties properties = new Properties();
         properties.putAll(config);
         return properties;
     }

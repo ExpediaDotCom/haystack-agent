@@ -157,7 +157,7 @@ public class KinesisSpanDispatcher implements Dispatcher {
                     .collect(Collectors.toList());
             return StringUtils.join(attemptStr, "\n");
         } else {
-            return "0";
+            return "none";
         }
     }
 }
