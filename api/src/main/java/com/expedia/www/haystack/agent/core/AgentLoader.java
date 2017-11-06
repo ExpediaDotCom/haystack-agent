@@ -42,7 +42,9 @@ public class AgentLoader {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             for (final Agent agent : runningAgents) {
-                agent.close();
+                try {
+                    agent.close();
+                } catch(Exception ignored) { }
             }
             SharedMetricRegistry.closeJmxMetricReporter();
         }));

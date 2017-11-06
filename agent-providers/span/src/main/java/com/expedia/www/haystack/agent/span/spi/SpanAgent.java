@@ -74,7 +74,9 @@ public class SpanAgent implements Agent {
     @Override
     public void close() {
         for (final Dispatcher dispatcher : dispatchers) {
-            dispatcher.close();
+            try {
+                dispatcher.close();
+            } catch (Exception ignored) { }
         }
 
         LOGGER.info("shutting down gRPC server and jmx reporter");
