@@ -20,7 +20,7 @@ import com.amazonaws.services.kinesis.producer.*;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.expedia.open.tracing.Span;
-import com.expedia.www.haystack.agent.core.Dispatcher;
+import com.expedia.www.haystack.agent.core.span.Dispatcher;
 import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
 import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
@@ -41,8 +41,8 @@ import java.util.stream.Collectors;
 public class KinesisSpanDispatcher implements Dispatcher {
     private final static Logger LOGGER = LoggerFactory.getLogger(KinesisSpanDispatcher.class);
 
-    private static final String STREAM_NAME_KEY = "StreamName";
-    private static final String OUTSTANDING_RECORD_LIMIT_KEY = "OutstandingRecordsLimit";
+    static final String STREAM_NAME_KEY = "StreamName";
+    static final String OUTSTANDING_RECORD_LIMIT_KEY = "OutstandingRecordsLimit";
 
     private final Timer dispatchTimer = SharedMetricRegistry.newTimer("kinesis.dispatch.timer");
     private final Meter dispatchFailureMeter = SharedMetricRegistry.newMeter("kinesis.dispatch.failure");
@@ -50,7 +50,7 @@ public class KinesisSpanDispatcher implements Dispatcher {
 
     private KinesisProducer producer;
     private String streamName;
-    private Long outstandingRecordsLimit;
+    private Integer outstandingRecordsLimit;
 
     @Override
     public String getName() {
@@ -58,7 +58,7 @@ public class KinesisSpanDispatcher implements Dispatcher {
     }
 
     @Override
-    public void dispatch(final Span record) throws Exception {
+    public void dispatch(final Span span) throws Exception {
         if (producer.getOutstandingRecordsCount() > outstandingRecordsLimit) {
             outstandingRecordsError.mark();
             throw new RuntimeException(String.format("excessive number of outstanding records: %d",
@@ -66,22 +66,22 @@ public class KinesisSpanDispatcher implements Dispatcher {
         } else {
             final Timer.Context timer = dispatchTimer.time();
             final ListenableFuture<UserRecordResult> response = producer.addUserRecord(streamName,
-                    record.getTraceId(),
-                    ByteBuffer.wrap(record.toByteArray()));
+                    span.getTraceId(),
+                    ByteBuffer.wrap(span.toByteArray()));
             handleAsyncResponse(response, timer);
         }
     }
 
     @Override
     public void initialize(final Map<String, Object> conf) {
-        streamName = getAndRemoveStreamNameKey(conf);
-        outstandingRecordsLimit = getAndRemoveOutstandingRecordLimitKey(conf);
+        setStreamName(getAndRemoveStreamNameKey(conf));
+        setOutstandingRecordsLimit(getAndRemoveOutstandingRecordLimitKey(conf));
 
         Validate.notNull(streamName);
         Validate.notNull(outstandingRecordsLimit);
         Validate.notNull(conf.get("Region"));
 
-        producer = new KinesisProducer(buildKinesisProducerConfiguration(conf));
+        setKinesisProducer(new KinesisProducer(buildKinesisProducerConfiguration(conf)));
         LOGGER.info("Successfully initialized the kinesis span dispatcher");
     }
 
@@ -105,8 +105,8 @@ public class KinesisSpanDispatcher implements Dispatcher {
     }
 
     @VisibleForTesting
-    Long getAndRemoveOutstandingRecordLimitKey(final Map<String, Object> conf) {
-        final Long outstandingRecord = ConfigurationHelpers.getPropertyAsType(conf, OUTSTANDING_RECORD_LIMIT_KEY, Long.class, Optional.empty());
+    Integer getAndRemoveOutstandingRecordLimitKey(final Map<String, Object> conf) {
+        final Integer outstandingRecord = ConfigurationHelpers.getPropertyAsType(conf, OUTSTANDING_RECORD_LIMIT_KEY, Integer.class, Optional.empty());
         conf.remove(OUTSTANDING_RECORD_LIMIT_KEY);
         return outstandingRecord;
     }
@@ -159,5 +159,20 @@ public class KinesisSpanDispatcher implements Dispatcher {
         } else {
             return "none";
         }
+    }
+
+    @VisibleForTesting
+    void setKinesisProducer(final KinesisProducer producer) {
+        this.producer = producer;
+    }
+
+    @VisibleForTesting
+    void setStreamName(final String streamName) {
+        this.streamName= streamName;
+    }
+
+    @VisibleForTesting
+    void setOutstandingRecordsLimit(final Integer outstandingRecordsLimit) {
+        this.outstandingRecordsLimit = outstandingRecordsLimit;
     }
 }

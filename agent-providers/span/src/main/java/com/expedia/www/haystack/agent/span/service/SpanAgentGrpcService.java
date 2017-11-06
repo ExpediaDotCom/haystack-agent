@@ -22,7 +22,7 @@ import com.codahale.metrics.Timer;
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.agent.api.DispatchResult;
 import com.expedia.open.tracing.agent.api.SpanAgentGrpc;
-import com.expedia.www.haystack.agent.core.Dispatcher;
+import com.expedia.www.haystack.agent.core.span.Dispatcher;
 import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import io.grpc.stub.StreamObserver;
 import org.apache.commons.lang3.StringUtils;

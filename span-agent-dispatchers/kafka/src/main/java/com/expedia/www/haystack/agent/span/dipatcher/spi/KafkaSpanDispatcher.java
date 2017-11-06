@@ -20,8 +20,9 @@ package com.expedia.www.haystack.agent.span.dipatcher.spi;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.expedia.open.tracing.Span;
-import com.expedia.www.haystack.agent.core.Dispatcher;
+import com.expedia.www.haystack.agent.core.span.Dispatcher;
 import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -66,20 +67,31 @@ public class KafkaSpanDispatcher implements Dispatcher {
 
     @Override
     public void initialize(final Map<String, Object> conf) {
-        Validate.notNull(conf.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
-        Validate.notNull(conf.get(PRODUCER_TOPIC));
+        Validate.notNull(conf.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG), ProducerConfig.BOOTSTRAP_SERVERS_CONFIG + " can't be empty or null");
+        Validate.notNull(conf.get(PRODUCER_TOPIC), PRODUCER_TOPIC + " property can't be null or empty");
 
         // remove the producer topic from the configuration and use it during send() call
-        topic = conf.remove(PRODUCER_TOPIC).toString();
-        producer = new KafkaProducer<>(conf, new ByteArraySerializer(), new ByteArraySerializer());
+        setTopic(conf.remove(PRODUCER_TOPIC).toString());
+        setKafkaProducer(new KafkaProducer<>(conf, new ByteArraySerializer(), new ByteArraySerializer()));
     }
 
     @Override
     public void close() {
         LOGGER.info("Closing the kafka span dispatcher now...");
         if(producer != null) {
+            producer.flush();
             producer.close(10, TimeUnit.SECONDS);
             producer = null;
         }
+    }
+
+    @VisibleForTesting
+    void setKafkaProducer(final KafkaProducer<byte[], byte[]> producer) {
+        this.producer = producer;
+    }
+
+    @VisibleForTesting
+    void setTopic(final String topic) {
+        this.topic = topic;
     }
 }

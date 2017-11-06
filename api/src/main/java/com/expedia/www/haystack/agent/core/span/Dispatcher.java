@@ -15,7 +15,7 @@
  *
  */
 
-package com.expedia.www.haystack.agent.core;
+package com.expedia.www.haystack.agent.core.span;
 
 import com.expedia.open.tracing.Span;
 
