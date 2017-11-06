@@ -300,7 +300,7 @@
                         <dependency>
                             <groupId>com.expedia.www</groupId>
                             <artifactId>build-tools</artifactId>
-                            <version>0.1.0</version>
+                            <version>0.1.0-SNAPSHOT</version>
                         </dependency>
                     </dependencies>
                     <configuration>
@@ -429,7 +429,7 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>COMPLEXITY</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.5</minimum>
+                                            <minimum>0.55</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
