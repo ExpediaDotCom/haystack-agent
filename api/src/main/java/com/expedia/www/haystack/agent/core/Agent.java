@@ -19,7 +19,7 @@ package com.expedia.www.haystack.agent.core;
 
 import com.expedia.www.haystack.agent.core.config.AgentConfig;
 
-public interface Agent {
+public interface Agent extends AutoCloseable {
 
     /**
      * unique name of the agent, this is used to selectively load the agent by the name

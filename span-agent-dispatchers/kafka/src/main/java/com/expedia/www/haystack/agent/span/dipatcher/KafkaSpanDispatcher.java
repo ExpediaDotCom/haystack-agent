@@ -15,7 +15,7 @@
  *
  */
 
-package com.expedia.www.haystack.agent.span.dipatcher.spi;
+package com.expedia.www.haystack.agent.span.dipatcher;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;

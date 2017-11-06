@@ -46,9 +46,26 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
       agentConfig.setDispatchers(dispatchersCfgMap)
 
       val cl = new ReplacingClassLoader(getClass.getClassLoader, dispatcherLoadFile, "dispatcherProvider.txt")
-      val dispatchers = agent.getAndInitializeDispatchers(agentConfig, cl)
+      val dispatchers = agent.loadAndInitializeDispatchers(agentConfig, cl)
       dispatchers.size() shouldBe 1
       dispatchers.head.close()
+    }
+
+    it("initialization should fail if no dispatchers exist") {
+      val agent = new SpanAgent()
+      val agentConfig = new AgentConfig
+      agentConfig.setName("spans")
+      val dispatchersCfgMap = new util.HashMap[String, util.Map[String, Object]]()
+      val testDispatcherConfig = new util.HashMap[String, Object]()
+      testDispatcherConfig.put("k1", "v1")
+      dispatchersCfgMap.put("test-dispatcher", testDispatcherConfig)
+      agentConfig.setDispatchers(dispatchersCfgMap)
+
+      val caught = intercept[Exception] {
+        agent.loadAndInitializeDispatchers(agentConfig, getClass.getClassLoader)
+      }
+
+      caught.getMessage shouldEqual "Span agent dispatchers can't be an empty set"
     }
   }
 

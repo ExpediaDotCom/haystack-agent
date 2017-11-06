@@ -21,7 +21,7 @@ import com.expedia.open.tracing.Span;
 
 import java.util.Map;
 
-public interface Dispatcher {
+public interface Dispatcher extends AutoCloseable {
     /**
      * returns the unique name for this dispatcher
      * @return
@@ -41,9 +41,4 @@ public interface Dispatcher {
      * @param conf
      */
     void initialize(final Map<String, Object> conf);
-
-    /**
-     * close the dispatcher, this is called when the agent is shutting down.
-     */
-    void close();
 }

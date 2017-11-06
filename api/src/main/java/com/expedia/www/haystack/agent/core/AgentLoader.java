@@ -21,7 +21,6 @@ import com.expedia.www.haystack.agent.core.config.Config;
 import com.expedia.www.haystack.agent.core.config.ConfigReader;
 import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,14 +38,23 @@ public class AgentLoader {
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         final Config config = loadConfig(configProviderName, configProviderArgs, cl);
-        loadAgents(config, cl);
-    }
+        final List<Agent> runningAgents = loadAgents(config, cl);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            for (final Agent agent : runningAgents) {
+                try {
+                    agent.close();
+                } catch(Exception ignored) { }
+            }
+            SharedMetricRegistry.closeJmxMetricReporter();
+        }));
+}
 
     @VisibleForTesting
-    void loadAgents(final Config config, ClassLoader cl) throws Exception {
+    List<Agent> loadAgents(final Config config, ClassLoader cl) throws Exception {
         final ServiceLoader<Agent> agentLoader = ServiceLoader.load(Agent.class, cl);
 
-        final Set<String> agentConfigsLoaded = Sets.newHashSet();
+        final List<Agent> runningAgents = new ArrayList<>();
 
         for (final Agent agent : agentLoader) {
             final Optional<AgentConfig> agentConfig = config.getAgentConfigs()
@@ -55,19 +63,21 @@ public class AgentLoader {
             if(agentConfig.isPresent()) {
                 LOGGER.info("Initializing agent with name={} and config={}", agent.getName(), agentConfig.get());
                 agent.initialize(agentConfig.get());
-                agentConfigsLoaded.add(agentConfig.get().getName());
+                runningAgents.add(agent);
             }
         }
 
         final String notLoadableAgentNames =  config.getAgentConfigs()
                 .stream()
                 .map(AgentConfig::getName)
-                .filter((c) -> !agentConfigsLoaded.contains(c))
+                .filter((c) -> runningAgents.stream().noneMatch(a -> a.getName().equalsIgnoreCase(c)))
                 .reduce("", (prev, next) -> next + "," + prev);
 
         if(notLoadableAgentNames.length() > 0) {
             throw new ServiceConfigurationError("Fail to load the agents with names=" + notLoadableAgentNames);
         }
+
+        return runningAgents;
     }
 
     @VisibleForTesting
