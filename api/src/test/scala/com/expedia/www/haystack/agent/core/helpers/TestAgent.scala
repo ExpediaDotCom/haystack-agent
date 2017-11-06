@@ -4,6 +4,9 @@ import com.expedia.www.haystack.agent.core.Agent
 import com.expedia.www.haystack.agent.core.config.AgentConfig
 
 class TestAgent extends Agent {
+
+  var isInitialized = false
+
   /**
     * unique name of the agent, this is used to selectively load the agent by the name
     *
@@ -18,9 +21,17 @@ class TestAgent extends Agent {
     * @throws Exception throws an exception if fail to initialize
     */
   override def initialize(config: AgentConfig): Unit = {
+    isInitialized = true
     assert(config.getName.equalsIgnoreCase("spans"))
     assert(config.getProps.get("port").equals(8080))
     assert(config.getProps.get("k1").equals("v1"))
     assert(config.getDispatchers.containsKey("kafka"))
+  }
+
+  /**
+    * close the agent
+    */
+  override def close(): Unit = {
+    assert(isInitialized, "Fail to close the uninitialized agent")
   }
 }

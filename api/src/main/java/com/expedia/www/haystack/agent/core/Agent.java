@@ -33,4 +33,9 @@ public interface Agent {
      * @throws Exception throws an exception if fail to initialize
      */
     void initialize(final AgentConfig config) throws Exception;
+
+    /**
+     * close the agent
+     */
+    void close();
 }

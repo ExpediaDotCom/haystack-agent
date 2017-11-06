@@ -15,7 +15,7 @@
  *
  */
 
-package com.expedia.www.haystack.agent.span.dipatcher.spi
+package com.expedia.www.haystack.agent.span.dipatcher
 
 import java.util
 import java.util.concurrent.{Future, TimeUnit}

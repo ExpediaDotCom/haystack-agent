@@ -70,7 +70,9 @@ class AgentLoaderSpec extends FunSpec with Matchers {
 
       cfg.setAgentConfigs(util.Arrays.asList(agentConfig))
 
-      new AgentLoader().loadAgents(cfg, cl)
+      val runningAgents = new AgentLoader().loadAgents(cfg, cl)
+      runningAgents.size() shouldBe 1
+      runningAgents.get(0).close()
     }
 
     it("should fail to load the agent for unidentified name") {

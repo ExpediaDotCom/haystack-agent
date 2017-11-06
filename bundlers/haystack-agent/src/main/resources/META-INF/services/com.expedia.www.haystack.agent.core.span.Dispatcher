@@ -1,1 +1,1 @@
-com.expedia.www.haystack.agent.span.dipatcher.spi.KafkaSpanDispatcher
+com.expedia.www.haystack.agent.span.dipatcher.KafkaSpanDispatcher
