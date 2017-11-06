@@ -18,13 +18,15 @@
 package com.expedia.www.haystack.agent.span.spi;
 
 import com.expedia.www.haystack.agent.core.Agent;
-import com.expedia.www.haystack.agent.core.Dispatcher;
+import com.expedia.www.haystack.agent.core.span.Dispatcher;
 import com.expedia.www.haystack.agent.core.config.AgentConfig;
 import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
 import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import com.expedia.www.haystack.agent.span.service.SpanAgentGrpcService;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.internal.ServerImpl;
 import io.grpc.netty.NettyServerBuilder;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,20 +46,7 @@ public class SpanAgent implements Agent {
 
     @Override
     public void initialize(final AgentConfig config) throws IOException {
-
-        final List<Dispatcher> dispatchers = new ArrayList<>();
-
-        final ServiceLoader<Dispatcher> loadedDispatchers = ServiceLoader.load(Dispatcher.class);
-        for (final Dispatcher dispatcher : loadedDispatchers) {
-            config.getDispatchers()
-                    .entrySet()
-                    .stream()
-                    .filter((e) -> e.getKey().equalsIgnoreCase(dispatcher.getName()))
-                    .forEach((conf) -> {
-                        dispatcher.initialize(conf.getValue());
-                        dispatchers.add(dispatcher);
-                    });
-        }
+        final List<Dispatcher> dispatchers = getAndInitializeDispatchers(config, Thread.currentThread().getContextClassLoader());
 
         final Integer port = ConfigurationHelpers.getPropertyAsType(config.getProps(),
                 "port",
@@ -87,5 +76,26 @@ public class SpanAgent implements Agent {
         } catch (InterruptedException ex) {
             LOGGER.error("span agent server has been interrupted with exception", ex);
         }
+    }
+
+    @VisibleForTesting
+    List<Dispatcher> getAndInitializeDispatchers(final AgentConfig config, ClassLoader cl) {
+        final List<Dispatcher> dispatchers = new ArrayList<>();
+        final ServiceLoader<Dispatcher> loadedDispatchers = ServiceLoader.load(Dispatcher.class, cl);
+
+        for (final Dispatcher dispatcher : loadedDispatchers) {
+            config.getDispatchers()
+                    .entrySet()
+                    .stream()
+                    .filter((e) -> e.getKey().equalsIgnoreCase(dispatcher.getName()))
+                    .forEach((conf) -> {
+                        dispatcher.initialize(conf.getValue());
+                        dispatchers.add(dispatcher);
+                    });
+        }
+
+        Validate.notEmpty(dispatchers, "Dispatchers can't be an empty set");
+
+        return dispatchers;
     }
 }

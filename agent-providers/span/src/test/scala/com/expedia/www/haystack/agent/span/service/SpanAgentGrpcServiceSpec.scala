@@ -22,7 +22,7 @@ import java.util.Collections
 import com.expedia.open.tracing.Span
 import com.expedia.open.tracing.agent.api.DispatchResult
 import com.expedia.open.tracing.agent.api.DispatchResult.ResultCode
-import com.expedia.www.haystack.agent.core.Dispatcher
+import com.expedia.www.haystack.agent.core.span.Dispatcher
 import io.grpc.stub.StreamObserver
 import org.easymock.EasyMock
 import org.scalatest.easymock.EasyMockSugar
