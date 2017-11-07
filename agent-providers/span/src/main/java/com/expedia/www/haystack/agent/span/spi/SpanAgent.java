@@ -18,12 +18,12 @@
 package com.expedia.www.haystack.agent.span.spi;
 
 import com.expedia.www.haystack.agent.core.Agent;
+import com.expedia.www.haystack.agent.core.Dispatcher;
 import com.expedia.www.haystack.agent.core.config.AgentConfig;
 import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
-import com.expedia.www.haystack.agent.core.span.Dispatcher;
 import com.expedia.www.haystack.agent.span.service.SpanAgentGrpcService;
 import com.google.common.annotations.VisibleForTesting;
-import io.grpc.internal.ServerImpl;
+import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ public class SpanAgent implements Agent {
     private static Logger LOGGER = LoggerFactory.getLogger(SpanAgent.class);
 
     private List<Dispatcher> dispatchers;
-    private ServerImpl server;
+    private Server server;
 
     @Override
     public String getName() {
@@ -62,7 +62,7 @@ public class SpanAgent implements Agent {
                 .build()
                 .start();
 
-        LOGGER.info("span agent grpc server started ....");
+        LOGGER.info("span agent grpc server started on port {}....", port);
 
         try {
             server.awaitTermination();
@@ -73,14 +73,14 @@ public class SpanAgent implements Agent {
 
     @Override
     public void close() {
-        for (final Dispatcher dispatcher : dispatchers) {
-            try {
+        try {
+            for (final Dispatcher dispatcher : dispatchers) {
                 dispatcher.close();
-            } catch (Exception ignored) { }
+            }
+            LOGGER.info("shutting down gRPC server and jmx reporter");
+            server.shutdown();
+        } catch (Exception ignored) {
         }
-
-        LOGGER.info("shutting down gRPC server and jmx reporter");
-        server.shutdown();
     }
 
     @VisibleForTesting

@@ -22,7 +22,7 @@ import java.util.Collections
 import com.expedia.open.tracing.Span
 import com.expedia.open.tracing.agent.api.DispatchResult
 import com.expedia.open.tracing.agent.api.DispatchResult.ResultCode
-import com.expedia.www.haystack.agent.core.span.Dispatcher
+import com.expedia.www.haystack.agent.core.Dispatcher
 import io.grpc.stub.StreamObserver
 import org.easymock.EasyMock
 import org.scalatest.easymock.EasyMockSugar
@@ -38,8 +38,11 @@ class SpanAgentGrpcServiceSpec extends FunSpec with Matchers with EasyMockSugar 
       val service = new SpanAgentGrpcService(Collections.singletonList(dispatcher))
 
       val dispatchResult = EasyMock.newCapture[DispatchResult]()
+      val capturedSpan = EasyMock.newCapture[Array[Byte]]()
+      val capturedSpanPartitionKey = EasyMock.newCapture[Array[Byte]]()
+
       expecting {
-        dispatcher.dispatch(span).once()
+        dispatcher.dispatch(EasyMock.capture(capturedSpanPartitionKey), EasyMock.capture(capturedSpan)).once()
         responseObserver.onNext(EasyMock.capture(dispatchResult)).once()
         responseObserver.onCompleted().once()
       }
@@ -47,6 +50,8 @@ class SpanAgentGrpcServiceSpec extends FunSpec with Matchers with EasyMockSugar 
         service.dispatch(span, responseObserver)
         dispatchResult.getValue.getCode shouldBe ResultCode.SUCCESS
         dispatchResult.getValue.getErrorMessage shouldBe ""
+        capturedSpanPartitionKey.getValue shouldBe span.getTraceId.getBytes("utf-8")
+        capturedSpan.getValue shouldBe span.toByteArray
       }
     }
 
@@ -57,16 +62,22 @@ class SpanAgentGrpcServiceSpec extends FunSpec with Matchers with EasyMockSugar 
       val service = new SpanAgentGrpcService(Collections.singletonList(dispatcher))
 
       val dispatchResult = EasyMock.newCapture[DispatchResult]()
+      val capturedSpan = EasyMock.newCapture[Array[Byte]]()
+      val capturedSpanPartitionKey = EasyMock.newCapture[Array[Byte]]()
+
       expecting {
         dispatcher.getName.andReturn("test-dispatcher").anyTimes()
-        dispatcher.dispatch(span).andThrow(new RuntimeException("Fail to dispatch"))
+        dispatcher.dispatch(EasyMock.capture(capturedSpanPartitionKey), EasyMock.capture(capturedSpan)).andThrow(new RuntimeException("Fail to dispatch"))
         responseObserver.onNext(EasyMock.capture(dispatchResult)).once()
         responseObserver.onCompleted().once()
       }
+
       whenExecuting(dispatcher, responseObserver) {
         service.dispatch(span, responseObserver)
         dispatchResult.getValue.getCode shouldBe ResultCode.ERROR
-        dispatchResult.getValue.getErrorMessage shouldEqual "Fail to dispatch the span record to the dispatchers=test-dispatcher"
+        dispatchResult.getValue.getErrorMessage shouldEqual "Fail to dispatch the span record to the dispatchers=test-dispatcher with an unexpected error"
+        capturedSpanPartitionKey.getValue shouldBe span.getTraceId.getBytes("utf-8")
+        capturedSpan.getValue shouldBe span.toByteArray
       }
     }
 

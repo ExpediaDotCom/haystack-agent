@@ -20,8 +20,7 @@ package com.expedia.www.haystack.agent.span.helpers
 
 import java.util
 
-import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.agent.core.span.Dispatcher
+import com.expedia.www.haystack.agent.core.Dispatcher
 
 class TestDispatcher extends Dispatcher {
 
@@ -35,12 +34,13 @@ class TestDispatcher extends Dispatcher {
   override def getName: String = "test-dispatcher"
 
   /**
-    * dispatch the span record to the sink
+    * dispatch the record to the sink
     *
-    * @param record proto span record
-    * @throws Exception
+    * @param partitionKey partitionKey if present, else send null
+    * @param data         data bytes that need to be dispatched to the sink
+    * @throws Exception throws exception if fails to dispatch
     */
-  override def dispatch(record: Span): Unit = ()
+  override def dispatch(partitionKey: Array[Byte], data: Array[Byte]) = ()
 
   /**
     * initializes the dispatcher for pushing span records to the sink

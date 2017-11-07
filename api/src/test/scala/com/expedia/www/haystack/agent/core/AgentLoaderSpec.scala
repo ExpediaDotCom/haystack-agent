@@ -86,7 +86,7 @@ class AgentLoaderSpec extends FunSpec with Matchers {
       val caught = intercept[ServiceConfigurationError] {
         new AgentLoader().loadAgents(cfg, cl)
       }
-      caught.getMessage shouldEqual "Fail to load the agents with names=blobs,"
+      caught.getMessage shouldEqual "Fail to load the agents with names=blobs"
     }
 
     it("should parse the null config reader args") {

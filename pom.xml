@@ -12,8 +12,8 @@
         <module>api</module>
         <module>config-providers/file</module>
         <module>agent-providers/span</module>
-        <module>span-agent-dispatchers/kafka</module>
-        <module>span-agent-dispatchers/kinesis</module>
+        <module>agent-dispatchers/kafka</module>
+        <module>agent-dispatchers/kinesis</module>
         <module>bundlers/haystack-agent</module>
     </modules>
 
@@ -25,7 +25,7 @@
         <slf4j-api.version>1.7.25</slf4j-api.version>
         <jackson.version>2.9.0</jackson.version>
         <commons-lang.version>3.4</commons-lang.version>
-        <grpc.version>1.4.0</grpc.version>
+        <grpc.version>1.7.0</grpc.version>
         <metrics-core.version>3.2.5</metrics-core.version>
 
         <scala.major.version>2</scala.major.version>
@@ -62,19 +62,7 @@
 
             <dependency>
                 <groupId>io.grpc</groupId>
-                <artifactId>grpc-protobuf</artifactId>
-                <version>${grpc.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.grpc</groupId>
-                <artifactId>grpc-stub</artifactId>
-                <version>${grpc.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.grpc</groupId>
-                <artifactId>grpc-netty</artifactId>
+                <artifactId>grpc-all</artifactId>
                 <version>${grpc.version}</version>
             </dependency>
 

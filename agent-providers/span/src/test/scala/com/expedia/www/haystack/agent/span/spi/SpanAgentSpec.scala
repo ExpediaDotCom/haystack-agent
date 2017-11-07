@@ -28,7 +28,7 @@ import org.scalatest.easymock.EasyMockSugar
 import scala.collection.JavaConversions._
 
 class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
-  private val dispatcherLoadFile = "META-INF/services/com.expedia.www.haystack.agent.core.span.Dispatcher"
+  private val dispatcherLoadFile = "META-INF/services/com.expedia.www.haystack.agent.core.Dispatcher"
 
   describe("Span Agent") {
     it("should return the 'spans' as agent name") {
