@@ -57,11 +57,13 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
             try {
                 d.dispatch(span.getTraceId().getBytes("utf-8"), span.toByteArray());
             } catch (RateLimitException r) {
+                result.setCode(DispatchResult.ResultCode.RATE_LIMIT_ERROR);
                 dispatchFailureMeter.mark();
                 LOGGER.error("Fail to dispatch the span record due to rate limit errors", r);
                 failedDispatchers.append(d.getName()).append(',');
             }
             catch (Exception ex) {
+                result.setCode(DispatchResult.ResultCode.UNKNOWN_ERROR);
                 dispatchFailureMeter.mark();
                 LOGGER.error("Fail to dispatch the span record to the dispatcher with name={}", d.getName(), ex);
                 failedDispatchers.append(d.getName()).append(',');
@@ -69,9 +71,8 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
         }
 
         if(failedDispatchers.length() > 0) {
-            result.setCode(DispatchResult.ResultCode.ERROR);
             result.setErrorMessage("Fail to dispatch the span record to the dispatchers=" +
-                    StringUtils.removeEnd(failedDispatchers.toString(), ",") + " with an unexpected error");
+                    StringUtils.removeEnd(failedDispatchers.toString(), ","));
         }
 
         timer.close();

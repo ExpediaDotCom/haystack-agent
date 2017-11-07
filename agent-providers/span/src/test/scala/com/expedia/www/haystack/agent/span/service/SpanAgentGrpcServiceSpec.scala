@@ -22,7 +22,7 @@ import java.util.Collections
 import com.expedia.open.tracing.Span
 import com.expedia.open.tracing.agent.api.DispatchResult
 import com.expedia.open.tracing.agent.api.DispatchResult.ResultCode
-import com.expedia.www.haystack.agent.core.Dispatcher
+import com.expedia.www.haystack.agent.core.{Dispatcher, RateLimitException}
 import io.grpc.stub.StreamObserver
 import org.easymock.EasyMock
 import org.scalatest.easymock.EasyMockSugar
@@ -74,8 +74,34 @@ class SpanAgentGrpcServiceSpec extends FunSpec with Matchers with EasyMockSugar 
 
       whenExecuting(dispatcher, responseObserver) {
         service.dispatch(span, responseObserver)
-        dispatchResult.getValue.getCode shouldBe ResultCode.ERROR
-        dispatchResult.getValue.getErrorMessage shouldEqual "Fail to dispatch the span record to the dispatchers=test-dispatcher with an unexpected error"
+        dispatchResult.getValue.getCode shouldBe ResultCode.UNKNOWN_ERROR
+        dispatchResult.getValue.getErrorMessage shouldEqual "Fail to dispatch the span record to the dispatchers=test-dispatcher"
+        capturedSpanPartitionKey.getValue shouldBe span.getTraceId.getBytes("utf-8")
+        capturedSpan.getValue shouldBe span.toByteArray
+      }
+    }
+
+    it("should dispatch the span with rate limit error if dispatcher throws RateLimitException") {
+      val span = Span.newBuilder().setTraceId("traceid").build()
+      val dispatcher = mock[Dispatcher]
+      val responseObserver = mock[StreamObserver[DispatchResult]]
+      val service = new SpanAgentGrpcService(Collections.singletonList(dispatcher))
+
+      val dispatchResult = EasyMock.newCapture[DispatchResult]()
+      val capturedSpan = EasyMock.newCapture[Array[Byte]]()
+      val capturedSpanPartitionKey = EasyMock.newCapture[Array[Byte]]()
+
+      expecting {
+        dispatcher.getName.andReturn("test-dispatcher").anyTimes()
+        dispatcher.dispatch(EasyMock.capture(capturedSpanPartitionKey), EasyMock.capture(capturedSpan)).andThrow(new RateLimitException("Rate Limit Error!"))
+        responseObserver.onNext(EasyMock.capture(dispatchResult)).once()
+        responseObserver.onCompleted().once()
+      }
+
+      whenExecuting(dispatcher, responseObserver) {
+        service.dispatch(span, responseObserver)
+        dispatchResult.getValue.getCode shouldBe ResultCode.RATE_LIMIT_ERROR
+        dispatchResult.getValue.getErrorMessage shouldEqual "Fail to dispatch the span record to the dispatchers=test-dispatcher"
         capturedSpanPartitionKey.getValue shouldBe span.getTraceId.getBytes("utf-8")
         capturedSpan.getValue shouldBe span.toByteArray
       }
