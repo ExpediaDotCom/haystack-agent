@@ -38,12 +38,14 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
     private final Logger LOGGER = LoggerFactory.getLogger(SpanAgentGrpcService.class);
 
     private final List<Dispatcher> dispatchers;
-    private final Timer dispatchTimer = SharedMetricRegistry.newTimer("span.agent.dispatch.timer");
-    private final Meter dispatchFailureMeter = SharedMetricRegistry.newMeter("span.agent.dispatch.failures");
+    private final Timer dispatchTimer;
+    private final Meter dispatchFailureMeter;
 
     public SpanAgentGrpcService(final List<Dispatcher> dispatchers) {
         Validate.notEmpty(dispatchers, "Dispatchers can't be empty");
         this.dispatchers = dispatchers;
+        dispatchTimer = SharedMetricRegistry.newTimer("span.agent.dispatch.timer");
+        dispatchFailureMeter = SharedMetricRegistry.newMeter("span.agent.dispatch.failures");
     }
 
     @Override
