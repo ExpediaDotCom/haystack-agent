@@ -15,7 +15,7 @@ However one is free to use these agent libraries published in maven central to w
 
 # Architecture
 The haystack-agent uses the [SPI](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html) design architecture.
-The fat jar that gets built of this code contains single agent providers with two dispatchers (kinesis and kafka )discussed in more detail below. 
+The fat jar that gets built of this code contains single agent providers with two dispatchers (kinesis and kafka) discussed in more detail below. 
 However design allows to add more agent and dispatcher providers. 
 The agents are loaded depending upon the configuration that can be provided via a http endpoint or a local file like
 
@@ -24,7 +24,8 @@ java -jar target/haystack-agent.jar --config-provider file --file-path docker/de
 ```
 
 The main method in AgentLoader class loads and initializes the agents using ServiceLoader.load(). 
-Each agent further loads the configured dispatchers using the same mechanism and this is all controlled through configuration.
+Each agent further loads the configured dispatchers using the same ServiceLoader.load() mechanism and everything is controlled through configuration.
+
 
 
 ### Haystack Agent Configuration
