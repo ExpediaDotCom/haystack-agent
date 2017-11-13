@@ -16,6 +16,10 @@
  */
 package com.expedia.www.haystack.agent.dispatcher;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.profile.internal.securitytoken.RoleInfo;
+import com.amazonaws.auth.profile.internal.securitytoken.STSProfileCredentialsServiceProvider;
 import com.amazonaws.services.kinesis.producer.*;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
@@ -43,6 +47,7 @@ public class KinesisDispatcher implements Dispatcher {
 
     static final String STREAM_NAME_KEY = "StreamName";
     static final String OUTSTANDING_RECORD_LIMIT_KEY = "OutstandingRecordsLimit";
+    static final String STS_ROLE_ARN = "StsRoleArn";
 
     private final Timer dispatchTimer = SharedMetricRegistry.newTimer("kinesis.dispatch.timer");
     private final Meter dispatchFailureMeter = SharedMetricRegistry.newMeter("kinesis.dispatch.failure");
@@ -111,7 +116,19 @@ public class KinesisDispatcher implements Dispatcher {
 
     @VisibleForTesting
     KinesisProducerConfiguration buildKinesisProducerConfiguration(final Map<String, Object> conf) {
-        return KinesisProducerConfiguration.fromProperties(ConfigurationHelpers.generatePropertiesFromMap(conf));
+        final Object stsRoleArn = conf.remove(STS_ROLE_ARN);
+
+        final AWSCredentialsProvider credsProvider;
+        if(stsRoleArn != null) {
+            credsProvider = new STSProfileCredentialsServiceProvider(
+                    new RoleInfo().withRoleArn(stsRoleArn.toString()).withRoleSessionName("haystack-agent"));
+        } else {
+            credsProvider = DefaultAWSCredentialsProviderChain.getInstance();
+        }
+
+        return KinesisProducerConfiguration
+                .fromProperties(ConfigurationHelpers.generatePropertiesFromMap(conf))
+                .setCredentialsProvider(credsProvider);
     }
 
     private void handleAsyncResponse(final ListenableFuture<UserRecordResult> response, final Timer.Context timer) {
