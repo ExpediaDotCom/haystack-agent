@@ -120,6 +120,7 @@ public class KinesisDispatcher implements Dispatcher {
 
         final AWSCredentialsProvider credsProvider;
         if(stsRoleArn != null) {
+            LOGGER.info("Using aws sts credential provider with role arn={}", stsRoleArn);
             credsProvider = new STSProfileCredentialsServiceProvider(
                     new RoleInfo().withRoleArn(stsRoleArn.toString()).withRoleSessionName("haystack-agent"));
         } else {
