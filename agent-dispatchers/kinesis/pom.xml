@@ -22,6 +22,11 @@
             <version>${aws.kinesis.producer.lib.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sts</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-agent-api</artifactId>
             <version>0.1.0-SNAPSHOT</version>
