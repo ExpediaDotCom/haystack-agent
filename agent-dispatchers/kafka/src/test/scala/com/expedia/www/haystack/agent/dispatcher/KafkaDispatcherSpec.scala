@@ -21,6 +21,7 @@ import java.util
 import java.util.concurrent.{Future, TimeUnit}
 
 import com.expedia.open.tracing.Span
+import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.kafka.clients.producer._
 import org.easymock.EasyMock
 import org.scalatest.{FunSpec, Matchers}
@@ -58,19 +59,22 @@ class KafkaDispatcherSpec extends FunSpec with Matchers with EasyMockSugar {
     it("should fail to initialize kafka if bootstrap.servers property isn't present") {
       val kafka = new KafkaDispatcher()
       val caught = intercept[Exception] {
-        kafka.initialize(new util.HashMap[String, Object]())
+        kafka.initialize(ConfigFactory.empty())
       }
-      caught.getMessage shouldEqual "bootstrap.servers can't be empty or null"
+      caught.getMessage shouldEqual "No configuration setting found for key 'bootstrap'"
     }
 
     it("should fail to initialize kafka if producer.topic property isn't present") {
       val kafka = new KafkaDispatcher()
-      val config = new util.HashMap[String, Object]()
-      config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092")
+
+      val config = ConfigFactory.parseString(
+        """
+          | bootstrap.servers: "localhost:9092"
+        """.stripMargin)
       val caught = intercept[Exception] {
         kafka.initialize(config)
       }
-      caught.getMessage shouldEqual "producer.topic property can't be null or empty"
+      caught.getMessage shouldEqual "No configuration setting found for key 'producerTopic'"
     }
   }
 }

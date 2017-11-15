@@ -17,6 +17,8 @@
 
 package com.expedia.www.haystack.agent.core.config;
 
+import com.typesafe.config.Config;
+
 import java.util.Map;
 
 public interface ConfigReader {

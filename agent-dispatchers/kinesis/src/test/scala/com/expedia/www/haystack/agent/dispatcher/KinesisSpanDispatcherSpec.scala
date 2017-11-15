@@ -33,7 +33,7 @@ import org.scalatest.{FunSpec, Matchers}
 class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar {
 
   private val REGION_NAME_KEY = "Region"
-  private val METRIC_LEVEL_KEY = "MetricLevel"
+  private val METRIC_LEVEL_KEY = "MetricsLevel"
   protected val DEFAULT_OUTSTANDING_RECORDS_LIMIT = 10000L
 
 
@@ -45,10 +45,10 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar
   describe("Kinesis Dispatcher") {
 
     it("given a config object to be initialized it should be able to fetch the stream name and outstandin records limit") {
-      val props = new util.HashMap[String, Object]()
+      val props = new util.HashMap[String, String]()
       props.put(STREAM_NAME_KEY, streamName)
       props.put(REGION_NAME_KEY, region)
-      props.put(OUTSTANDING_RECORD_LIMIT_KEY, outstandingRecordsLimit)
+      props.put(OUTSTANDING_RECORD_LIMIT_KEY, outstandingRecordsLimit.toString)
       props.put(METRIC_LEVEL_KEY, metricLevel)
 
       val dispatcher = new KinesisDispatcher()
@@ -63,10 +63,10 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar
       val streamName = "test"
       val region = "us-west-2"
       val metricLevel = "detailed"
-      val props = new util.HashMap[String, Object]()
+      val props = new util.HashMap[String, String]()
       props.put(STREAM_NAME_KEY, streamName)
       props.put(REGION_NAME_KEY, region)
-      props.put(OUTSTANDING_RECORD_LIMIT_KEY, outstandingRecordsLimit)
+      props.put(OUTSTANDING_RECORD_LIMIT_KEY, outstandingRecordsLimit.toString)
       props.put(METRIC_LEVEL_KEY, metricLevel)
 
       val dispatcher = new KinesisDispatcher()
@@ -81,10 +81,10 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar
     it("should be able to build the kinesis producer configuration with sts role arn") {
       val streamName = "test"
       val region = "us-west-2"
-      val props = new util.HashMap[String, Object]()
+      val props = new util.HashMap[String, String]()
       props.put(STREAM_NAME_KEY, streamName)
       props.put(REGION_NAME_KEY, region)
-      props.put(OUTSTANDING_RECORD_LIMIT_KEY, outstandingRecordsLimit)
+      props.put(OUTSTANDING_RECORD_LIMIT_KEY, outstandingRecordsLimit.toString)
       props.put(STS_ROLE_ARN, "some-arn")
 
       val dispatcher = new KinesisDispatcher()

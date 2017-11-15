@@ -8,7 +8,7 @@ RUN mkdir -p ${APP_HOME}
 
 COPY bundlers/haystack-agent/target/${APP_NAME}.jar ${APP_HOME}/
 
-COPY docker/dev-config.yaml ${APP_HOME}/
+COPY docker/dev.conf ${APP_HOME}/
 COPY docker/start-app.sh ${APP_HOME}/
 
 RUN chmod +x ${APP_HOME}/start-app.sh
@@ -17,4 +17,4 @@ WORKDIR ${APP_HOME}
 
 ENTRYPOINT ["./start-app.sh"]
 
-CMD ["--config-provider", "file", "--file-path", "/app/bin/dev-config.yaml"]
+CMD ["--config-provider", "file", "--file-path", "/app/bin/dev.conf"]

@@ -19,10 +19,10 @@ package com.expedia.www.haystack.agent.span.spi;
 
 import com.expedia.www.haystack.agent.core.Agent;
 import com.expedia.www.haystack.agent.core.Dispatcher;
-import com.expedia.www.haystack.agent.core.config.AgentConfig;
 import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
 import com.expedia.www.haystack.agent.span.service.SpanAgentGrpcService;
 import com.google.common.annotations.VisibleForTesting;
+import com.typesafe.config.Config;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import org.apache.commons.lang3.Validate;
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.ServiceLoader;
 
 public class SpanAgent implements Agent {
@@ -47,13 +47,10 @@ public class SpanAgent implements Agent {
     }
 
     @Override
-    public void initialize(final AgentConfig config) throws IOException {
+    public void initialize(final Config config) throws IOException {
         dispatchers = loadAndInitializeDispatchers(config, Thread.currentThread().getContextClassLoader());
 
-        final Integer port = ConfigurationHelpers.getPropertyAsType(config.getProps(),
-                "port",
-                Integer.class,
-                Optional.empty());
+        final int port = config.getInt("port");
 
         server = NettyServerBuilder
                 .forPort(port)
@@ -84,12 +81,13 @@ public class SpanAgent implements Agent {
     }
 
     @VisibleForTesting
-    List<Dispatcher> loadAndInitializeDispatchers(final AgentConfig config, ClassLoader cl) {
+    List<Dispatcher> loadAndInitializeDispatchers(final Config config, ClassLoader cl) {
         final List<Dispatcher> dispatchers = new ArrayList<>();
         final ServiceLoader<Dispatcher> loadedDispatchers = ServiceLoader.load(Dispatcher.class, cl);
 
         for (final Dispatcher dispatcher : loadedDispatchers) {
-            config.getDispatchers()
+            final Map<String, Config> dispatches = ConfigurationHelpers.readDispatchersConfig(config);
+            dispatches
                     .entrySet()
                     .stream()
                     .filter((e) -> e.getKey().equalsIgnoreCase(dispatcher.getName()))

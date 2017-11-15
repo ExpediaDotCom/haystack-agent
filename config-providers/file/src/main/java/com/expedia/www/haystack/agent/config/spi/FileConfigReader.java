@@ -17,15 +17,15 @@
 
 package com.expedia.www.haystack.agent.config.spi;
 
-import com.expedia.www.haystack.agent.core.config.Config;
 import com.expedia.www.haystack.agent.core.config.ConfigReader;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
+import com.typesafe.config.Config;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.io.FileReader;
 import java.util.Map;
 
 /**
@@ -60,6 +60,6 @@ public class FileConfigReader implements ConfigReader {
             }
         }
 
-        return new ObjectMapper(new YAMLFactory()).readValue(new File(configFilePath), Config.class);
+        return ConfigurationHelpers.load(IOUtils.toString(new FileReader(configFilePath)));
     }
 }

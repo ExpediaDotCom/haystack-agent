@@ -20,8 +20,10 @@ package com.expedia.www.haystack.agent.dispatcher;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.expedia.www.haystack.agent.core.Dispatcher;
+import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
 import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
+import com.typesafe.config.Config;
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -30,13 +32,12 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class KafkaDispatcher implements Dispatcher {
     private final static Logger LOGGER = LoggerFactory.getLogger(KafkaDispatcher.class);
 
-    private final static String PRODUCER_TOPIC = "producer.topic";
+    private final static String PRODUCER_TOPIC = "producerTopic";
     private final Timer dispatchTimer = SharedMetricRegistry.newTimer("kafka.dispatch.timer");
     private final Meter dispatchFailure = SharedMetricRegistry.newMeter("kafka.dispatch.failure");
 
@@ -65,13 +66,14 @@ public class KafkaDispatcher implements Dispatcher {
     }
 
     @Override
-    public void initialize(final Map<String, Object> conf) {
-        Validate.notNull(conf.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG), ProducerConfig.BOOTSTRAP_SERVERS_CONFIG + " can't be empty or null");
-        Validate.notNull(conf.get(PRODUCER_TOPIC), PRODUCER_TOPIC + " property can't be null or empty");
+    public void initialize(final Config conf) {
+        Validate.notNull(conf.getString(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
 
         // remove the producer topic from the configuration and use it during send() call
-        setTopic(conf.remove(PRODUCER_TOPIC).toString());
-        setKafkaProducer(new KafkaProducer<>(conf, new ByteArraySerializer(), new ByteArraySerializer()));
+        setTopic(conf.getString(PRODUCER_TOPIC));
+        setKafkaProducer(new KafkaProducer<>(ConfigurationHelpers.generatePropertiesFromMap(ConfigurationHelpers.convertToPropertyMap(conf)),
+                new ByteArraySerializer(),
+                new ByteArraySerializer()));
     }
 
     @Override

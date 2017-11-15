@@ -29,16 +29,22 @@
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
-                <version>1.0</version>
                 <executions>
                     <execution>
                         <id>test</id>
                         <goals>
                             <goal>test</goal>
                         </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <haystack_env_agents_spans_k1>v2</haystack_env_agents_spans_k1>
+                                <haystack_env_agents_spans_other>100</haystack_env_agents_spans_other>
+                            </environmentVariables>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
+
 
             <plugin>
                 <groupId>com.github.os72</groupId>

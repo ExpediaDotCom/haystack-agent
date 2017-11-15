@@ -20,7 +20,7 @@ However design allows to add more agent and dispatcher providers.
 The agents are loaded depending upon the configuration that can be provided via a http endpoint or a local file like
 
 ```
-java -jar target/haystack-agent.jar --config-provider file --file-path docker/dev-config.yaml
+java -jar bundlers/haystack-agent/target/haystack-agent-<version>.jar --config-provider file --file-path docker/dev.conf
 ```
 
 The main method in AgentLoader class loads and initializes the agents using ServiceLoader.load(). 
@@ -38,19 +38,25 @@ This span agent spins up a grpc server listening on different ports 34000 and pu
 The app or microservice need to use a grpc client to send messages to this haystack-agent.
 
 ```
-agents:
-- name: "spans"
-  props:
-    port: 34000
-  dispatchers:
-    kinesis:
-      Region: us-west-2
-      StreamName: spans
-      OutstandingRecordsLimit: 10000
-      MetricsLevel: none
-    kafka:
-      bootstrap.servers: kafka-svc:9092
-      producer.topic: spans
+agents {
+  spans {
+    port = 34000
+
+    dispatchers {
+      kinesis {
+        Region = us-west-2
+        StreamName = spans
+        OutstandingRecordsLimit =10000
+        MetricsLevel = none
+      }
+      
+      kafka {
+        bootstrap.servers = kafka-svc:9092
+        producerTopic = spans
+      }
+    }
+  }
+}
 ```
 
 ## Agent Providers
@@ -81,7 +87,7 @@ Kafka dispatcher uses high level kafka producer to write the spans to kafka topi
 The dispatcher  expects a partition key and the span-agent uses the [TraceId](https://github.com/ExpediaDotCom/haystack-idl/blob/master/proto/span.proto) in span proto object for the same.
 
 ```
-a. producer.topic - kafka topic
+a. producerTopic - kafka topic
 b. bootstrap.servers - set of bootstrap servers
 
 ```

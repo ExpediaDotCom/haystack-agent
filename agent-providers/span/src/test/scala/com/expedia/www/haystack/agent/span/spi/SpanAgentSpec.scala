@@ -22,9 +22,10 @@ import java.io.IOException
 import java.net.URL
 import java.util
 
-import com.expedia.www.haystack.agent.core.config.AgentConfig
+import com.typesafe.config.ConfigFactory
 import org.scalatest.{FunSpec, Matchers}
 import org.scalatest.easymock.EasyMockSugar
+
 import scala.collection.JavaConversions._
 
 class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
@@ -37,32 +38,40 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
 
     it("should load the dispatchers from the config") {
       val agent = new SpanAgent()
-      val agentConfig = new AgentConfig
-      agentConfig.setName("spans")
-      val dispatchersCfgMap = new util.HashMap[String, util.Map[String, Object]]()
-      val testDispatcherConfig = new util.HashMap[String, Object]()
-      testDispatcherConfig.put("k1", "v1")
-      dispatchersCfgMap.put("test-dispatcher", testDispatcherConfig)
-      agentConfig.setDispatchers(dispatchersCfgMap)
+      val cfg = ConfigFactory.parseString(
+        """
+          |    k1 = "v1"
+          |    port = 8080
+          |
+          |    dispatchers {
+          |      test-dispatcher {
+          |        queueName = "myqueue"
+          |      }
+          |    }
+        """.stripMargin)
 
       val cl = new ReplacingClassLoader(getClass.getClassLoader, dispatcherLoadFile, "dispatcherProvider.txt")
-      val dispatchers = agent.loadAndInitializeDispatchers(agentConfig, cl)
+      val dispatchers = agent.loadAndInitializeDispatchers(cfg, cl)
       dispatchers.size() shouldBe 1
       dispatchers.head.close()
     }
 
     it("initialization should fail if no dispatchers exist") {
       val agent = new SpanAgent()
-      val agentConfig = new AgentConfig
-      agentConfig.setName("spans")
-      val dispatchersCfgMap = new util.HashMap[String, util.Map[String, Object]]()
-      val testDispatcherConfig = new util.HashMap[String, Object]()
-      testDispatcherConfig.put("k1", "v1")
-      dispatchersCfgMap.put("test-dispatcher", testDispatcherConfig)
-      agentConfig.setDispatchers(dispatchersCfgMap)
+      val cfg = ConfigFactory.parseString(
+        """
+          |    k1 = "v1"
+          |    port = 8080
+          |
+          |    dispatchers {
+          |      test-dispatcher {
+          |        queueName = "myqueue"
+          |      }
+          |    }
+        """.stripMargin)
 
       val caught = intercept[Exception] {
-        agent.loadAndInitializeDispatchers(agentConfig, getClass.getClassLoader)
+        agent.loadAndInitializeDispatchers(cfg, getClass.getClassLoader)
       }
 
       caught.getMessage shouldEqual "Span agent dispatchers can't be an empty set"

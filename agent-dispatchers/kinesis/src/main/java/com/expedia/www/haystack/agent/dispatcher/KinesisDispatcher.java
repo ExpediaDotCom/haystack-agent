@@ -31,6 +31,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.typesafe.config.Config;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -39,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class KinesisDispatcher implements Dispatcher {
@@ -78,15 +78,16 @@ public class KinesisDispatcher implements Dispatcher {
     }
 
     @Override
-    public void initialize(final Map<String, Object> conf) {
-        setStreamName(getAndRemoveStreamNameKey(conf));
-        setOutstandingRecordsLimit(getAndRemoveOutstandingRecordLimitKey(conf));
+    public void initialize(final Config config) {
+        final Map<String, String> props = ConfigurationHelpers.convertToPropertyMap(config);
+        setStreamName(getAndRemoveStreamNameKey(props));
+        setOutstandingRecordsLimit(getAndRemoveOutstandingRecordLimitKey(props));
 
         Validate.notNull(streamName);
         Validate.notNull(outstandingRecordsLimit);
-        Validate.notNull(conf.get("Region"));
+        Validate.notNull(props.get("Region"));
 
-        setKinesisProducer(new KinesisProducer(buildKinesisProducerConfiguration(conf)));
+        setKinesisProducer(new KinesisProducer(buildKinesisProducerConfiguration(props)));
         LOGGER.info("Successfully initialized the kinesis span dispatcher");
     }
 
@@ -101,21 +102,19 @@ public class KinesisDispatcher implements Dispatcher {
 
     //Making these functions protected so that they can be tested
     @VisibleForTesting
-    String getAndRemoveStreamNameKey(final Map<String, Object> conf) {
-        final String streamName = ConfigurationHelpers.getPropertyAsType(conf, STREAM_NAME_KEY, String.class, Optional.empty());
-        conf.remove(STREAM_NAME_KEY);
-        return streamName;
+    String getAndRemoveStreamNameKey(final Map<String, String> conf) {
+        return conf.remove(STREAM_NAME_KEY);
     }
 
     @VisibleForTesting
-    Integer getAndRemoveOutstandingRecordLimitKey(final Map<String, Object> conf) {
-        final Integer outstandingRecord = ConfigurationHelpers.getPropertyAsType(conf, OUTSTANDING_RECORD_LIMIT_KEY, Integer.class, Optional.empty());
+    Integer getAndRemoveOutstandingRecordLimitKey(final Map<String, String> conf) {
+        final Integer outstandingRecord = Integer.parseInt(conf.get(OUTSTANDING_RECORD_LIMIT_KEY));
         conf.remove(OUTSTANDING_RECORD_LIMIT_KEY);
         return outstandingRecord;
     }
 
     @VisibleForTesting
-    KinesisProducerConfiguration buildKinesisProducerConfiguration(final Map<String, Object> conf) {
+    KinesisProducerConfiguration buildKinesisProducerConfiguration(final Map<String, String> conf) {
         final Object stsRoleArn = conf.remove(STS_ROLE_ARN);
 
         final AWSCredentialsProvider credsProvider;

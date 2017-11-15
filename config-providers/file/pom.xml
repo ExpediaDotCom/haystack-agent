@@ -25,6 +25,10 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -40,7 +44,7 @@
                         </goals>
                         <configuration>
                             <environmentVariables>
-                                <HAYSTACK_AGENT_CONFIG_FILE_PATH>src/test/resources/config.yaml</HAYSTACK_AGENT_CONFIG_FILE_PATH>
+                                <HAYSTACK_AGENT_CONFIG_FILE_PATH>src/test/resources/test.conf</HAYSTACK_AGENT_CONFIG_FILE_PATH>
                             </environmentVariables>
                         </configuration>
                     </execution>

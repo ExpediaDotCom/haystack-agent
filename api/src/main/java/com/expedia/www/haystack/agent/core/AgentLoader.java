@@ -16,11 +16,11 @@
  */
 package com.expedia.www.haystack.agent.core;
 
-import com.expedia.www.haystack.agent.core.config.AgentConfig;
-import com.expedia.www.haystack.agent.core.config.Config;
 import com.expedia.www.haystack.agent.core.config.ConfigReader;
+import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
 import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
+import com.typesafe.config.Config;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
@@ -63,19 +63,20 @@ public class AgentLoader {
         final List<Agent> runningAgents = new ArrayList<>();
         final List<String> missingAgents = new ArrayList<>();
 
-        for(final AgentConfig cfg : config.getAgentConfigs()) {
+        for(final Map.Entry<String, Config> cfg : ConfigurationHelpers.readAgentConfigs(config).entrySet()) {
+            final String agentName = cfg.getKey();
             final Optional<Agent> maybeAgent = loadedAgents
                     .stream()
-                    .filter((l) -> l.getName().equalsIgnoreCase(cfg.getName()))
+                    .filter((l) -> l.getName().equalsIgnoreCase(agentName))
                     .findFirst();
 
             if (maybeAgent.isPresent()) {
                 final Agent agent = maybeAgent.get();
-                LOGGER.info("Initializing agent with name={} and config={}", cfg.getName(), cfg);
-                agent.initialize(cfg);
+                LOGGER.info("Initializing agent with name={} and config={}", agentName, cfg);
+                agent.initialize(cfg.getValue());
                 runningAgents.add(agent);
             } else {
-                missingAgents.add(cfg.getName());
+                missingAgents.add(agentName);
             }
         }
 
