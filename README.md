@@ -116,8 +116,8 @@ For a full build, including unit tests you can run -
 mvn clean package
 ```
 ####How to run locally?
-Edit dev-config.yaml and set the kafka endpoint correctly and then run
+Edit dev.conf and set the kafka endpoint correctly and then run
 ```
-java -jar bundlers/haystack-agent/target/haystack-agent-0.1.0-SNAPSHOT.jar --config-provider file --file-path docker/dev-config.yaml
+java -jar bundlers/haystack-agent/target/haystack-agent-0.1.0-SNAPSHOT.jar --config-provider file --file-path docker/dev.conf
 ```
 This will spin up grpc server on port 8080
