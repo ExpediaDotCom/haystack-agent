@@ -48,8 +48,8 @@ class FileConfigReaderSpec extends FunSpec with Matchers {
 
     val spanAgentConfig = agentsConfig.get("spans")
     val configStr = spanAgentConfig.toString
-
-    configStr shouldEqual "Config(SimpleConfigObject({\"dispatchers\":{\"kinesis\":{\"arn\":\"arn-1\",\"queueName\":\"myqueue\"}},\"key1\":\"value1\",\"port\":8080}))"
+    println(configStr)
+    configStr shouldEqual "Config(SimpleConfigObject({\"dispatchers\":{\"kinesis\":{\"arn\":\"arn-1\",\"queueName\":\"myqueue\"}},\"enabled\":true,\"key1\":\"value1\",\"port\":8080}))"
     spanAgentConfig.getString("key1") shouldEqual "value1"
     spanAgentConfig.getInt("port") shouldBe 8080
 
@@ -61,8 +61,7 @@ class FileConfigReaderSpec extends FunSpec with Matchers {
 
     val blobsAgentConfig = agentsConfig.get("blobs")
     val blobConfStr = blobsAgentConfig.toString
-    println(blobConfStr)
-//    blobConfStr.substring(blobConfStr.indexOf('[')) shouldEqual "[name=blobs,props={key2=value2, port=80},dispatchers={s3={iam=iam-role}}]"
+    blobConfStr shouldEqual "Config(SimpleConfigObject({\"dispatchers\":{\"s3\":{\"iam\":\"iam-role\"}},\"enabled\":true,\"key2\":\"value2\",\"port\":80}))"
     blobsAgentConfig.getString("key2") shouldEqual "value2"
     blobsAgentConfig.getInt("port") shouldBe 80
 

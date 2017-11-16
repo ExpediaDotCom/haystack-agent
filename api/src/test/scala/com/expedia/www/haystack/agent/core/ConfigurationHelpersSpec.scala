@@ -28,6 +28,7 @@ class ConfigurationHelpersSpec extends FunSpec with Matchers {
         """
           |agents {
           |  spans {
+          |    enabled = true
           |    k1 = "v1"
           |    port = 8080
           |
@@ -43,6 +44,7 @@ class ConfigurationHelpersSpec extends FunSpec with Matchers {
       val cfg = ConfigurationHelpers.load(configStr)
       cfg.getString("agents.spans.k1") shouldEqual "v2"
       cfg.getInt("agents.spans.other") shouldEqual 100
+      cfg.getBoolean("agents.spans.enabled") shouldBe true
     }
   }
 }

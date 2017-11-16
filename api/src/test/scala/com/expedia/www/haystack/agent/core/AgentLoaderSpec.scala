@@ -60,6 +60,7 @@ class AgentLoaderSpec extends FunSpec with Matchers {
         """
           |agents {
           |  spans {
+          |    enabled = true
           |    k1 = "v1"
           |    port = 8080
           |
@@ -78,6 +79,32 @@ class AgentLoaderSpec extends FunSpec with Matchers {
       runningAgents.get(0).close()
     }
 
+
+    it("should not load the agent if disabled") {
+      val cl = new ReplacingClassLoader(getClass.getClassLoader, agentServiceFile, "singleAgentProvider.txt")
+
+      val cfg = ConfigFactory.parseString(
+        """
+          |agents {
+          |  spans {
+          |    enabled = false
+          |    k1 = "v1"
+          |    port = 8080
+          |
+          |    dispatchers {
+          |      kinesis {
+          |        arn = "arn-1"
+          |        queueName = "myqueue"
+          |      }
+          |    }
+          |  }
+          |}
+        """.stripMargin)
+
+      val runningAgents = new AgentLoader().loadAgents(cfg, cl)
+      runningAgents.size() shouldBe 0
+    }
+
     it("should fail to load the agent for unidentified name") {
       val cl = new ReplacingClassLoader(getClass.getClassLoader, agentServiceFile, "singleAgentProvider.txt")
 
@@ -85,6 +112,7 @@ class AgentLoaderSpec extends FunSpec with Matchers {
         """
           |agents {
           |  blobs {
+          |    enabled = true
           |    port = 8085
           |
           |    dispatchers {

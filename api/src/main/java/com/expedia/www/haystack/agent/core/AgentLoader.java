@@ -65,18 +65,22 @@ public class AgentLoader {
 
         for(final Map.Entry<String, Config> cfg : ConfigurationHelpers.readAgentConfigs(config).entrySet()) {
             final String agentName = cfg.getKey();
-            final Optional<Agent> maybeAgent = loadedAgents
-                    .stream()
-                    .filter((l) -> l.getName().equalsIgnoreCase(agentName))
-                    .findFirst();
+            if(cfg.getValue().getBoolean("enabled")) {
+                final Optional<Agent> maybeAgent = loadedAgents
+                        .stream()
+                        .filter((l) -> l.getName().equalsIgnoreCase(agentName))
+                        .findFirst();
 
-            if (maybeAgent.isPresent()) {
-                final Agent agent = maybeAgent.get();
-                LOGGER.info("Initializing agent with name={} and config={}", agentName, cfg);
-                agent.initialize(cfg.getValue());
-                runningAgents.add(agent);
+                if (maybeAgent.isPresent()) {
+                    final Agent agent = maybeAgent.get();
+                    LOGGER.info("Initializing agent with name={} and config={}", agentName, cfg);
+                    agent.initialize(cfg.getValue());
+                    runningAgents.add(agent);
+                } else {
+                    missingAgents.add(agentName);
+                }
             } else {
-                missingAgents.add(agentName);
+                LOGGER.info("Agent with name={} and config={} is disabled", agentName, cfg);
             }
         }
 
