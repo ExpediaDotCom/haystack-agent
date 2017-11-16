@@ -17,6 +17,52 @@
         <module>bundlers/haystack-agent</module>
     </modules>
 
+    <scm>
+        <connection>scm:git:git://github.com/ExpediaDotCom/haystack-agent.git</connection>
+        <developerConnection>scm:git:ssh://github.com/ExpediaDotCom/haystack-agent.git</developerConnection>
+        <url>http://github.com/ExpediaDotCom/haystack-agent</url>
+    </scm>
+
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Code to build haystack agent to push spans to various sinks</description>
+    <url>https://github.com/ExpediaDotCom/haystack-agent/tree/master</url>
+
+    <licenses>
+        <!--
+           /*
+            *
+            *  Copyright 2017 Expedia, Inc.
+            *
+            *     Licensed under the Apache License, Version 2.0 (the "License");
+            *     you may not use this file except in compliance with the License.
+            *     You may obtain a copy of the License at
+            *
+            *         http://www.apache.org/licenses/LICENSE-2.0
+            *
+            *     Unless required by applicable law or agreed to in writing, software
+            *     distributed under the License is distributed on an "AS IS" BASIS,
+            *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+            *     See the License for the specific language governing permissions and
+            *     limitations under the License.
+            *
+            */
+          -->
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>haystack</id>
+            <name>Haystack Team</name>
+            <email>haystack@expedia.com</email>
+            <url>https://github.com/ExpediaDotCom/haystack</url>
+        </developer>
+    </developers>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.jdk.version>1.8</project.jdk.version>
@@ -483,20 +529,4 @@
         </plugins>
     </reporting>
 
-    <developers>
-        <developer>
-            <id>haystack</id>
-            <name>Haystack Team</name>
-            <email>haystack@expedia.com</email>
-            <url>https://github.com/ExpediaDotCom/haystack</url>
-        </developer>
-    </developers>
-
-    <licenses>
-        <license>
-            <name>Apache</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
 </project>
