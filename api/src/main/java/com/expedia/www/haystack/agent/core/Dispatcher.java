@@ -17,7 +17,7 @@
 
 package com.expedia.www.haystack.agent.core;
 
-import java.util.Map;
+import com.typesafe.config.Config;
 
 public interface Dispatcher extends AutoCloseable {
     /**
@@ -39,5 +39,5 @@ public interface Dispatcher extends AutoCloseable {
      * initializes the dispatcher for pushing span records to the sink
      * @param conf
      */
-    void initialize(final Map<String, Object> conf);
+    void initialize(final Config conf);
 }

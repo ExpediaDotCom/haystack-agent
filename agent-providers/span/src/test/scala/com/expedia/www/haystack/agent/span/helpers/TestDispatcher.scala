@@ -18,9 +18,8 @@
 
 package com.expedia.www.haystack.agent.span.helpers
 
-import java.util
-
 import com.expedia.www.haystack.agent.core.Dispatcher
+import com.typesafe.config.Config
 
 class TestDispatcher extends Dispatcher {
 
@@ -47,9 +46,9 @@ class TestDispatcher extends Dispatcher {
     *
     * @param conf
     */
-  override def initialize(conf: util.Map[String, AnyRef]): Unit = {
+  override def initialize(conf: Config): Unit = {
     isInitialized = true
-    assert(conf != null && conf.get("k1").toString.equals("v1"))
+    assert(conf != null && conf.getString("queueName") == "myqueue")
   }
 
   /**

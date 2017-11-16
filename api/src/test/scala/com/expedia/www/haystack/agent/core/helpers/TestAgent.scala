@@ -1,7 +1,7 @@
 package com.expedia.www.haystack.agent.core.helpers
 
 import com.expedia.www.haystack.agent.core.Agent
-import com.expedia.www.haystack.agent.core.config.AgentConfig
+import com.typesafe.config.Config
 
 class TestAgent extends Agent {
 
@@ -17,15 +17,17 @@ class TestAgent extends Agent {
   /**
     * initialize the agent
     *
-    * @param config config object
+    * @param cfg config object
     * @throws Exception throws an exception if fail to initialize
     */
-  override def initialize(config: AgentConfig): Unit = {
+  override def initialize(cfg: Config): Unit = {
     isInitialized = true
-    assert(config.getName.equalsIgnoreCase("spans"))
-    assert(config.getProps.get("port").equals(8080))
-    assert(config.getProps.get("k1").equals("v1"))
-    assert(config.getDispatchers.containsKey("kafka"))
+
+    assert(cfg.getInt("port") == 8080)
+    assert(cfg.getString("k1") == "v1")
+
+    assert(cfg.getConfig("dispatchers") != null)
+    assert(cfg.getConfig("dispatchers").hasPath("kinesis"))
   }
 
   /**

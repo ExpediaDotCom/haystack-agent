@@ -17,46 +17,70 @@
 
 package com.expedia.www.haystack.agent.core.config;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.*;
 
 public class ConfigurationHelpers {
+    private final static String HAYSTACK_AGENT_ENV_VAR_PREFIX = "haystack_env_";
+
     private ConfigurationHelpers() { /* suppress pmd violation */ }
 
-    public static <T> T getPropertyAsType(Map<String, Object> properties, final String propertyName, Class<T> type, final Optional<T> defaultValue) {
-        Object value = properties.get(propertyName);
-        if (value == null) {
-            if (defaultValue.isPresent()) {
-                return defaultValue.get();
-            } else {
-                throw new IllegalArgumentException(String.format("Could not find key for %s in configuration", propertyName));
-            }
-
-        }
-
-        if (type.isAssignableFrom(value.getClass())) {
-            return type.cast(value);
-        }
-        if (value instanceof String) {
-            if (type.equals(Integer.class)) {
-                return type.cast(Integer.valueOf((String) value));
-            }
-
-            if (type.equals(Boolean.class)) {
-                return type.cast(Boolean.valueOf((String) value));
-            }
-
-            if (type.equals(Long.class)) {
-                return type.cast(Long.valueOf((String) value));
-            }
-        }
-        throw new IllegalArgumentException(String.format("%s key in configuration can't be cast to type %s", propertyName, type.getSimpleName()));
-    }
-
-    public static Properties generatePropertiesFromMap(Map<String, Object> config) {
+    public static Properties generatePropertiesFromMap(Map<String, String> config) {
         final Properties properties = new Properties();
         properties.putAll(config);
         return properties;
+    }
+
+    public static Config load(final String configStr) {
+        return loadFromEnvVars().withFallback(ConfigFactory.parseString(configStr));
+    }
+
+    private static boolean isHaystackAgentEnvVar(final String envKey) {
+        return envKey.startsWith(HAYSTACK_AGENT_ENV_VAR_PREFIX);
+    }
+
+    private static Config loadFromEnvVars() {
+        final Map<String, String> envMap = new HashMap<>();
+        System.getenv().entrySet().stream()
+                .filter((e) -> isHaystackAgentEnvVar(e.getKey()))
+                .forEach((e) -> {
+                    final String normalizedKey = e.getKey().replaceFirst(HAYSTACK_AGENT_ENV_VAR_PREFIX, "").replace('_', '.');
+                    envMap.put(normalizedKey, e.getValue());
+                });
+
+        return ConfigFactory.parseMap(envMap);
+    }
+
+    public static Map<String, Config> readAgentConfigs(final Config config) {
+        final Map<String, Config> agentConfigs = new HashMap<>();
+        final Config agentsConfig = config.getConfig("agents");
+
+        final Set<String> agentNames = new HashSet<>();
+        agentsConfig.entrySet().forEach((e) -> agentNames.add(findRootKeyName(e.getKey())));
+        agentNames.forEach((name) -> agentConfigs.put(name, agentsConfig.getConfig(name)));
+        return agentConfigs;
+    }
+
+    public static Map<String, Config> readDispatchersConfig(final Config config) {
+        final Config dispatchers = config.getConfig("dispatchers");
+        final Map<String, Config> dispatchersConfigMap = new HashMap<>();
+
+        final Set<String> dispatcherNames = new HashSet<>();
+        dispatchers.entrySet().forEach((e) -> dispatcherNames.add(findRootKeyName(e.getKey())));
+        dispatcherNames.forEach((name) -> dispatchersConfigMap.put(name, dispatchers.getConfig(name)));
+        return dispatchersConfigMap;
+    }
+
+    public static Map<String, String> convertToPropertyMap(final Config conf) {
+        final Map<String, String> props = new HashMap<>();
+        conf.entrySet().forEach((e) -> props.put(e.getKey(), e.getValue().unwrapped().toString()));
+        return props;
+    }
+
+    private static String findRootKeyName(final String path) {
+        return StringUtils.split(path, ".")[0];
     }
 }

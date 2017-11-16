@@ -17,7 +17,8 @@
 
 package com.expedia.www.haystack.agent.core;
 
-import com.expedia.www.haystack.agent.core.config.AgentConfig;
+
+import com.typesafe.config.Config;
 
 public interface Agent extends AutoCloseable {
 
@@ -32,5 +33,5 @@ public interface Agent extends AutoCloseable {
      * @param config config object
      * @throws Exception throws an exception if fail to initialize
      */
-    void initialize(final AgentConfig config) throws Exception;
+    void initialize(final Config config) throws Exception;
 }
