@@ -40,6 +40,7 @@ The app or microservice need to use a grpc client to send messages to this hayst
 ```
 agents {
   spans {
+    enabled = true
     port = 34000
 
     dispatchers {
