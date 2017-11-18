@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.expedia.www</groupId>
     <artifactId>haystack-agent-core</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -482,13 +482,11 @@
                                 <exclude>**/com/expedia/open/tracing/**/*</exclude>
                             </excludes>
                             <rules>
-                                <!--  implementation is needed only for Maven 2  -->
                                 <rule implementation="org.jacoco.maven.RuleConfiguration">
                                     <element>BUNDLE</element>
                                     <limits>
-                                        <!--  implementation is needed only for Maven 2  -->
                                         <limit implementation="org.jacoco.report.check.Limit">
-                                            <counter>COMPLEXITY</counter>
+                                            <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>0.5</minimum>
                                         </limit>
@@ -520,7 +518,6 @@
                 <reportSets>
                     <reportSet>
                         <reports>
-                            <!-- select non-aggregate reports -->
                             <report>report</report>
                         </reports>
                     </reportSet>

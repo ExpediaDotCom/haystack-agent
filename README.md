@@ -76,8 +76,11 @@ Kinesis dispatcher uses [KPL](https://github.com/awslabs/amazon-kinesis-producer
 a. Region - aws region for e.g. us-west-2
 b. StreamName - name of kinesis stream where spans will be published
 c. OutstandingRecordsLimit - maximum pending records that are still not published to kinesis. If agent receives more dispatch requests, then it sends back 'RATE_LIMIT_ERROR' in grpc response.
+d. AwsAccessKey
+   AwsSecretKey - Optional, use them if you want to connect using static aws access and secret keys
+e. StsRoleArn - Optional, use it if you want to provide crendetials by assuming a role
 
-You need to provide AWS_ACCESS_KEY and AWS_SECRET_KEY as java system property or environment variable or use the IAM role for connecting to Kinesis.
+You can also provide AWS_ACCESS_KEY and AWS_SECRET_KEY as java system property or environment variable or use the IAM role for connecting to Kinesis - DefaultCredentialProvider.
 ```
 
 Kinesis dispatcher can be configured with other [KPL properties](https://github.com/awslabs/amazon-kinesis-producer/blob/master/java/amazon-kinesis-producer-sample/default_config.properties) in the same way as we do with 'Region'
@@ -119,6 +122,6 @@ mvn clean package
 ####How to run locally?
 Edit dev.conf and set the kafka endpoint correctly and then run
 ```
-java -jar bundlers/haystack-agent/target/haystack-agent-0.1.0-SNAPSHOT.jar --config-provider file --file-path docker/dev.conf
+java -jar bundlers/haystack-agent/target/haystack-agent-<version>.jar --config-provider file --file-path docker/dev.conf
 ```
 This will spin up grpc server on port 8080

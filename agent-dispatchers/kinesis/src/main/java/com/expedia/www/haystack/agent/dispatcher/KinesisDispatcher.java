@@ -17,6 +17,8 @@
 package com.expedia.www.haystack.agent.dispatcher;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.profile.internal.securitytoken.RoleInfo;
 import com.amazonaws.auth.profile.internal.securitytoken.STSProfileCredentialsServiceProvider;
@@ -40,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class KinesisDispatcher implements Dispatcher {
@@ -48,6 +51,8 @@ public class KinesisDispatcher implements Dispatcher {
     static final String STREAM_NAME_KEY = "StreamName";
     static final String OUTSTANDING_RECORD_LIMIT_KEY = "OutstandingRecordsLimit";
     static final String STS_ROLE_ARN = "StsRoleArn";
+    static final String AWS_ACCESS_KEY = "AwsAccessKey";
+    static final String AWS_SECRET_KEY = "AwsSecretKey";
 
     private final Timer dispatchTimer = SharedMetricRegistry.newTimer("kinesis.dispatch.timer");
     private final Meter dispatchFailureMeter = SharedMetricRegistry.newMeter("kinesis.dispatch.failure");
@@ -115,20 +120,31 @@ public class KinesisDispatcher implements Dispatcher {
 
     @VisibleForTesting
     KinesisProducerConfiguration buildKinesisProducerConfiguration(final Map<String, String> conf) {
-        final Object stsRoleArn = conf.remove(STS_ROLE_ARN);
-
-        final AWSCredentialsProvider credsProvider;
-        if(stsRoleArn != null) {
-            LOGGER.info("Using aws sts credential provider with role arn={}", stsRoleArn);
-            credsProvider = new STSProfileCredentialsServiceProvider(
-                    new RoleInfo().withRoleArn(stsRoleArn.toString()).withRoleSessionName("haystack-agent"));
-        } else {
-            credsProvider = DefaultAWSCredentialsProviderChain.getInstance();
-        }
-
+        final AWSCredentialsProvider credsProvider = buildCredsProvider(conf);
         return KinesisProducerConfiguration
                 .fromProperties(ConfigurationHelpers.generatePropertiesFromMap(conf))
                 .setCredentialsProvider(credsProvider);
+    }
+
+    @VisibleForTesting
+    AWSCredentialsProvider buildCredsProvider(final Map<String, String> conf) {
+        final Object stsRoleArn = conf.remove(STS_ROLE_ARN);
+        final Object awsAccessKey = conf.remove(AWS_ACCESS_KEY);
+        final Object awsSecretKey = conf.remove(AWS_SECRET_KEY);
+
+        if (Objects.nonNull(awsAccessKey) && Objects.nonNull(awsSecretKey)) {
+            LOGGER.info("Using static credential provider using aws access and secret keys");
+            return new AWSStaticCredentialsProvider(
+                    new BasicAWSCredentials(awsAccessKey.toString(), awsSecretKey.toString()));
+        } else {
+            if (Objects.nonNull(stsRoleArn)) {
+                LOGGER.info("Using aws sts credential provider with role arn={}", stsRoleArn);
+                return new STSProfileCredentialsServiceProvider(
+                        new RoleInfo().withRoleArn(stsRoleArn.toString()).withRoleSessionName("haystack-agent"));
+            } else {
+                return DefaultAWSCredentialsProviderChain.getInstance();
+            }
+        }
     }
 
     private void handleAsyncResponse(final ListenableFuture<UserRecordResult> response, final Timer.Context timer) {
