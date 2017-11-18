@@ -76,8 +76,8 @@ Kinesis dispatcher uses [KPL](https://github.com/awslabs/amazon-kinesis-producer
 a. Region - aws region for e.g. us-west-2
 b. StreamName - name of kinesis stream where spans will be published
 c. OutstandingRecordsLimit - maximum pending records that are still not published to kinesis. If agent receives more dispatch requests, then it sends back 'RATE_LIMIT_ERROR' in grpc response.
-d. AWS_ACCESS_KEY 
-   AWS_SECRET_KEY - Optional, use them if you want to connect using static aws access and secret keys
+d. AwsAccessKey
+   AwsSecretKey - Optional, use them if you want to connect using static aws access and secret keys
 e. StsRoleArn - Optional, use it if you want to provide crendetials by assuming a role
 
 You can also provide AWS_ACCESS_KEY and AWS_SECRET_KEY as java system property or environment variable or use the IAM role for connecting to Kinesis - DefaultCredentialProvider.
