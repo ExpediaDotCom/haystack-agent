@@ -20,8 +20,8 @@ package com.expedia.www.haystack.agent.dispatcher
 import java.nio.ByteBuffer
 import java.util
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.auth.profile.internal.securitytoken.STSProfileCredentialsServiceProvider
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.services.kinesis.producer.{KinesisProducer, UserRecordResult}
 import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.agent.dispatcher.KinesisDispatcher._
@@ -92,6 +92,26 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar
 
       config.getRegion shouldEqual region
       config.getCredentialsProvider.getClass shouldBe classOf[STSProfileCredentialsServiceProvider]
+    }
+
+    it("should be able to build the kinesis producer configuration with aws access and secret keys") {
+      val streamName = "test"
+      val region = "us-west-2"
+      val props = new util.HashMap[String, String]()
+      props.put(STREAM_NAME_KEY, streamName)
+      props.put(REGION_NAME_KEY, region)
+      props.put(OUTSTANDING_RECORD_LIMIT_KEY, outstandingRecordsLimit.toString)
+      props.put(AWS_ACCESS_KEY, "my-access-key")
+      props.put(AWS_SECRET_KEY, "my-secret-key")
+
+      val dispatcher = new KinesisDispatcher()
+      val config = dispatcher.buildKinesisProducerConfiguration(props)
+
+      config.getRegion shouldEqual region
+      config.getCredentialsProvider.getClass shouldBe classOf[AWSStaticCredentialsProvider]
+      val credsProvider = config.getCredentialsProvider.asInstanceOf[AWSStaticCredentialsProvider].getCredentials
+      credsProvider.getAWSAccessKeyId shouldEqual "my-access-key"
+      credsProvider.getAWSSecretKey shouldEqual "my-secret-key"
     }
 
     it("should dispatch span to kinesis") {
