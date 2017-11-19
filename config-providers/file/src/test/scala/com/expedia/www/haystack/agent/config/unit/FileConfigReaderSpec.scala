@@ -53,9 +53,10 @@ class FileConfigReaderSpec extends FunSpec with Matchers {
     spanAgentConfig.getString("key1") shouldEqual "value1"
     spanAgentConfig.getInt("port") shouldBe 8080
 
-    var dispatchersConfig = ConfigurationHelpers.readDispatchersConfig(spanAgentConfig)
+    var dispatchersConfig = ConfigurationHelpers.readDispatchersConfig(spanAgentConfig, "spans")
     dispatchersConfig.size() shouldBe 1
     val kinesisDispatcher = dispatchersConfig.get("kinesis")
+    kinesisDispatcher.getString(ConfigurationHelpers.AGENT_NAME_KEY) shouldEqual "spans"
     kinesisDispatcher.getString("arn") shouldEqual "arn-1"
     kinesisDispatcher.getString("queueName") shouldEqual "myqueue"
 
@@ -65,10 +66,11 @@ class FileConfigReaderSpec extends FunSpec with Matchers {
     blobsAgentConfig.getString("key2") shouldEqual "value2"
     blobsAgentConfig.getInt("port") shouldBe 80
 
-    dispatchersConfig = ConfigurationHelpers.readDispatchersConfig(blobsAgentConfig)
+    dispatchersConfig = ConfigurationHelpers.readDispatchersConfig(blobsAgentConfig, "blobs")
 
     dispatchersConfig.size() shouldBe 1
     val s3Dispatcher = dispatchersConfig.get("s3")
+    s3Dispatcher.getString(ConfigurationHelpers.AGENT_NAME_KEY) shouldEqual "blobs"
     s3Dispatcher.getString("iam") shouldEqual "iam-role"
   }
 }

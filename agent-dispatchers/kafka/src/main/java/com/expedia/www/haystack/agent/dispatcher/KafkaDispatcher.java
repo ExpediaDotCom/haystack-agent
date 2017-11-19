@@ -21,8 +21,6 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.expedia.www.haystack.agent.core.Dispatcher;
 import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
-import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
-import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
 import org.apache.commons.lang3.Validate;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -34,15 +32,19 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry.*;
+
+
 public class KafkaDispatcher implements Dispatcher {
     private final static Logger LOGGER = LoggerFactory.getLogger(KafkaDispatcher.class);
 
     private final static String PRODUCER_TOPIC = "producerTopic";
-    private final Timer dispatchTimer = SharedMetricRegistry.newTimer("kafka.dispatch.timer");
-    private final Meter dispatchFailure = SharedMetricRegistry.newMeter("kafka.dispatch.failure");
 
-    private KafkaProducer<byte[], byte[]> producer;
-    private String topic;
+    Timer dispatchTimer;
+    Meter dispatchFailure;
+
+    KafkaProducer<byte[], byte[]> producer;
+    String topic;
 
     @Override
     public String getName() {
@@ -66,14 +68,21 @@ public class KafkaDispatcher implements Dispatcher {
     }
 
     @Override
-    public void initialize(final Config conf) {
-        Validate.notNull(conf.getString(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+    public void initialize(final Config config) {
+        final String agentName = config.hasPath("agentName") ? config.getString("agentName") : "";
+
+        Validate.notNull(config.getString(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
 
         // remove the producer topic from the configuration and use it during send() call
-        setTopic(conf.getString(PRODUCER_TOPIC));
-        setKafkaProducer(new KafkaProducer<>(ConfigurationHelpers.generatePropertiesFromMap(ConfigurationHelpers.convertToPropertyMap(conf)),
+        topic = config.getString(PRODUCER_TOPIC);
+        producer = new KafkaProducer<>(ConfigurationHelpers.generatePropertiesFromMap(ConfigurationHelpers.convertToPropertyMap(config)),
                 new ByteArraySerializer(),
-                new ByteArraySerializer()));
+                new ByteArraySerializer());
+
+        dispatchTimer = newTimer(buildMetricName(agentName, "kafka.dispatch.timer"));
+        dispatchFailure = newMeter(buildMetricName(agentName, "kafka.dispatch.failure"));
+
+        LOGGER.info("Successfully initialized the kafka dispatcher with config={}", config);
     }
 
     @Override
@@ -84,15 +93,5 @@ public class KafkaDispatcher implements Dispatcher {
             producer.close(10, TimeUnit.SECONDS);
             producer = null;
         }
-    }
-
-    @VisibleForTesting
-    void setKafkaProducer(final KafkaProducer<byte[], byte[]> producer) {
-        this.producer = producer;
-    }
-
-    @VisibleForTesting
-    void setTopic(final String topic) {
-        this.topic = topic;
     }
 }

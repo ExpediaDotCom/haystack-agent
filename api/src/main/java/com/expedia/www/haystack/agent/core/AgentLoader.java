@@ -80,7 +80,7 @@ public class AgentLoader {
                     missingAgents.add(agentName);
                 }
             } else {
-                LOGGER.info("Agent with name={} and config={} is disabled", agentName, cfg);
+                LOGGER.info("Agent with name='{}' and config='{}' is disabled", agentName, cfg);
             }
         }
 

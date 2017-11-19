@@ -28,13 +28,12 @@ import com.codahale.metrics.Timer;
 import com.expedia.www.haystack.agent.core.Dispatcher;
 import com.expedia.www.haystack.agent.core.RateLimitException;
 import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
-import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.typesafe.config.Config;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +44,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.expedia.www.haystack.agent.core.config.ConfigurationHelpers.AGENT_NAME_KEY;
+import static com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry.*;
+
 public class KinesisDispatcher implements Dispatcher {
     private final static Logger LOGGER = LoggerFactory.getLogger(KinesisDispatcher.class);
 
@@ -54,13 +56,13 @@ public class KinesisDispatcher implements Dispatcher {
     static final String AWS_ACCESS_KEY = "AwsAccessKey";
     static final String AWS_SECRET_KEY = "AwsSecretKey";
 
-    private final Timer dispatchTimer = SharedMetricRegistry.newTimer("kinesis.dispatch.timer");
-    private final Meter dispatchFailureMeter = SharedMetricRegistry.newMeter("kinesis.dispatch.failure");
-    private final Meter outstandingRecordsError = SharedMetricRegistry.newMeter("kinesis.dispatch.outstanding.records.error");
+    Timer dispatchTimer;
+    Meter dispatchFailureMeter;
+    Meter outstandingRecordsError;
 
-    private KinesisProducer producer;
-    private String streamName;
-    private Integer outstandingRecordsLimit;
+    KinesisProducer producer;
+    String streamName;
+    Integer outstandingRecordsLimit;
 
     @Override
     public String getName() {
@@ -84,16 +86,24 @@ public class KinesisDispatcher implements Dispatcher {
 
     @Override
     public void initialize(final Config config) {
+        final String agentName = config.hasPath(AGENT_NAME_KEY) ? config.getString(AGENT_NAME_KEY ) : "";
+
         final Map<String, String> props = ConfigurationHelpers.convertToPropertyMap(config);
-        setStreamName(getAndRemoveStreamNameKey(props));
-        setOutstandingRecordsLimit(getAndRemoveOutstandingRecordLimitKey(props));
+        this.streamName = getAndRemoveStreamNameKey(props);
+        this.outstandingRecordsLimit = getAndRemoveOutstandingRecordLimitKey(props);
 
         Validate.notNull(streamName);
         Validate.notNull(outstandingRecordsLimit);
         Validate.notNull(props.get("Region"));
 
-        setKinesisProducer(new KinesisProducer(buildKinesisProducerConfiguration(props)));
-        LOGGER.info("Successfully initialized the kinesis span dispatcher");
+        this.producer = new KinesisProducer(buildKinesisProducerConfiguration(props));
+        this.dispatchTimer = newTimer(buildMetricName(agentName, "kinesis.dispatch.timer"));
+        this.dispatchFailureMeter = newMeter(buildMetricName(agentName, "kinesis.dispatch.failure"));
+        this.outstandingRecordsError = newMeter(buildMetricName(agentName, "kinesis.dispatch.outstanding.records.error"));
+        newGauge(buildMetricName(agentName, "kinesis.outstanding.requests"),
+                () -> producer.getOutstandingRecordsCount());
+
+        LOGGER.info("Successfully initialized the kinesis dispatcher with config={}", config);
     }
 
     @Override
@@ -190,20 +200,5 @@ public class KinesisDispatcher implements Dispatcher {
         } else {
             return "none";
         }
-    }
-
-    @VisibleForTesting
-    void setKinesisProducer(final KinesisProducer producer) {
-        this.producer = producer;
-    }
-
-    @VisibleForTesting
-    void setStreamName(final String streamName) {
-        this.streamName= streamName;
-    }
-
-    @VisibleForTesting
-    void setOutstandingRecordsLimit(final Integer outstandingRecordsLimit) {
-        this.outstandingRecordsLimit = outstandingRecordsLimit;
     }
 }

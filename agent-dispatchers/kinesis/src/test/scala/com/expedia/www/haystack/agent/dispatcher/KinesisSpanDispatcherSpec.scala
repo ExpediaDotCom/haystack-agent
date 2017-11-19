@@ -23,6 +23,7 @@ import java.util
 import com.amazonaws.auth.profile.internal.securitytoken.STSProfileCredentialsServiceProvider
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.services.kinesis.producer.{KinesisProducer, UserRecordResult}
+import com.codahale.metrics.{Meter, Timer}
 import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.agent.dispatcher.KinesisDispatcher._
 import com.google.common.util.concurrent.ListenableFuture
@@ -35,7 +36,6 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar
   private val REGION_NAME_KEY = "Region"
   private val METRIC_LEVEL_KEY = "MetricsLevel"
   protected val DEFAULT_OUTSTANDING_RECORDS_LIMIT = 10000L
-
 
   val streamName = "test"
   val region = "us-west-2"
@@ -118,10 +118,13 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar
       val dispatcher = new KinesisDispatcher()
       val kinesisProducer = mock[KinesisProducer]
       val responseFuture = mock[ListenableFuture[UserRecordResult]]
+      val timer = mock[Timer]
+      val timerContext = mock[Timer.Context]
 
-      dispatcher.setKinesisProducer(kinesisProducer)
-      dispatcher.setStreamName("mystream")
-      dispatcher.setOutstandingRecordsLimit(1000)
+      dispatcher.producer = kinesisProducer
+      dispatcher.streamName = "mystream"
+      dispatcher.outstandingRecordsLimit = 1000
+      dispatcher.dispatchTimer = timer
 
       val span = Span.newBuilder().setTraceId("traceid").build()
 
@@ -131,9 +134,10 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar
         kinesisProducer.flushSync().once()
         kinesisProducer.destroy().once()
         responseFuture.addListener(EasyMock.anyObject(), EasyMock.anyObject())
+        timer.time().andReturn(timerContext)
       }
 
-      whenExecuting(kinesisProducer, responseFuture) {
+      whenExecuting(kinesisProducer, responseFuture, timer, timerContext) {
         dispatcher.dispatch(span.getTraceId.getBytes("utf-8"), span.toByteArray)
         dispatcher.close()
       }
@@ -142,18 +146,21 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar
     it("should fail dispatch span to kinesis with outstanding limit error") {
       val dispatcher = new KinesisDispatcher()
       val kinesisProducer = mock[KinesisProducer]
+      val outstandRecErrorMeter = mock[Meter]
 
-      dispatcher.setKinesisProducer(kinesisProducer)
-      dispatcher.setStreamName("mystream")
-      dispatcher.setOutstandingRecordsLimit(1000)
+      dispatcher.producer = kinesisProducer
+      dispatcher.streamName = "mystream"
+      dispatcher.outstandingRecordsLimit = 1000
+      dispatcher.outstandingRecordsError = outstandRecErrorMeter
 
       val span = Span.newBuilder().setTraceId("traceid").build()
 
       expecting {
         kinesisProducer.getOutstandingRecordsCount.andReturn(1001).anyTimes()
+        outstandRecErrorMeter.mark()
       }
 
-      whenExecuting(kinesisProducer) {
+      whenExecuting(kinesisProducer, outstandRecErrorMeter) {
         val caught = intercept[Exception] {
           dispatcher.dispatch(span.getTraceId.getBytes("utf-8"), span.toByteArray)
         }

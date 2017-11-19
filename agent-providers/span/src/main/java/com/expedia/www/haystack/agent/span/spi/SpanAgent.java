@@ -86,7 +86,7 @@ public class SpanAgent implements Agent {
         final ServiceLoader<Dispatcher> loadedDispatchers = ServiceLoader.load(Dispatcher.class, cl);
 
         for (final Dispatcher dispatcher : loadedDispatchers) {
-            final Map<String, Config> dispatches = ConfigurationHelpers.readDispatchersConfig(config);
+            final Map<String, Config> dispatches = ConfigurationHelpers.readDispatchersConfig(config, getName());
             dispatches
                     .entrySet()
                     .stream()

@@ -18,6 +18,7 @@
 package com.expedia.www.haystack.agent.core.metrics;
 
 import com.codahale.metrics.*;
+import org.apache.commons.lang3.StringUtils;
 
 public class SharedMetricRegistry {
     private final static String MetricRegistryName = "HAYSTACK_AGENT_METRIC_REGISTRY";
@@ -66,6 +67,20 @@ public class SharedMetricRegistry {
      */
     public static Meter newMeter(final String name) {
         return get().meter(name);
+    }
+
+    public static <T> Gauge newGauge(final String name, final Gauge<T> gauge) {
+        return get().gauge(name, () -> gauge);
+    }
+
+    /**
+     * adds agentName(if non-empty) as prefix to metricName
+     * @param agentName name of agent
+     * @param metricName name of metric
+     * @return complete metric name
+     */
+    public static String buildMetricName(final String agentName, final String metricName) {
+        return StringUtils.isEmpty(agentName) ? metricName : agentName + "." + metricName;
     }
 
     private static MetricRegistry get() {
