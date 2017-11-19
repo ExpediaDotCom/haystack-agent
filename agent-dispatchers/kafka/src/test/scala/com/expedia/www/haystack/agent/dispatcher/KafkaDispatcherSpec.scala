@@ -17,15 +17,15 @@
 
 package com.expedia.www.haystack.agent.dispatcher
 
-import java.util
 import java.util.concurrent.{Future, TimeUnit}
 
+import com.codahale.metrics.Timer
 import com.expedia.open.tracing.Span
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 import org.apache.kafka.clients.producer._
 import org.easymock.EasyMock
-import org.scalatest.{FunSpec, Matchers}
 import org.scalatest.mock.EasyMockSugar
+import org.scalatest.{FunSpec, Matchers}
 
 class KafkaDispatcherSpec extends FunSpec with Matchers with EasyMockSugar {
   describe("Kafka Span Dispatcher") {
@@ -33,17 +33,22 @@ class KafkaDispatcherSpec extends FunSpec with Matchers with EasyMockSugar {
       val dispatcher = new KafkaDispatcher()
       val producer = mock[KafkaProducer[Array[Byte], Array[Byte]]]
       val future = mock[Future[RecordMetadata]]
-      dispatcher.setKafkaProducer(producer)
-      dispatcher.setTopic("mytopic")
+      val timer = mock[Timer]
+      val timerContext = mock[Timer.Context]
+
+      dispatcher.producer = producer
+      dispatcher.topic = "mytopic"
+      dispatcher.dispatchTimer = timer
 
       val capturedProducerRecord = EasyMock.newCapture[ProducerRecord[Array[Byte], Array[Byte]]]()
       expecting {
         producer.send(EasyMock.capture(capturedProducerRecord), EasyMock.anyObject(classOf[Callback])).andReturn(future).once()
         producer.flush().once()
         producer.close(10, TimeUnit.SECONDS).once
+        timer.time().andReturn(timerContext)
       }
 
-      whenExecuting(producer, future) {
+      whenExecuting(producer, future, timer, timerContext) {
         val span = Span.newBuilder().setTraceId("traceid").build()
         dispatcher.dispatch(span.getTraceId.getBytes("utf-8"), span.toByteArray)
         val producerRecord = capturedProducerRecord.getValue
