@@ -74,7 +74,7 @@ class AgentLoaderSpec extends FunSpec with Matchers {
           |}
         """.stripMargin)
 
-      val runningAgents = new AgentLoader().loadAgents(cfg, cl)
+      val runningAgents = new AgentLoader().loadAgents(cfg, cl, false)
       runningAgents.size() shouldBe 1
       runningAgents.get(0).close()
     }
@@ -101,7 +101,7 @@ class AgentLoaderSpec extends FunSpec with Matchers {
           |}
         """.stripMargin)
 
-      val runningAgents = new AgentLoader().loadAgents(cfg, cl)
+      val runningAgents = new AgentLoader().loadAgents(cfg, cl, false)
       runningAgents.size() shouldBe 0
     }
 
@@ -125,7 +125,7 @@ class AgentLoaderSpec extends FunSpec with Matchers {
         """.stripMargin)
 
       val caught = intercept[ServiceConfigurationError] {
-        new AgentLoader().loadAgents(cfg, cl)
+        new AgentLoader().loadAgents(cfg, cl, false)
       }
       caught.getMessage shouldEqual "Fail to load the agents with names=blobs"
     }

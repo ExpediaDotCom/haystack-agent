@@ -95,6 +95,7 @@ public class KinesisDispatcher implements Dispatcher {
         Validate.notNull(streamName);
         Validate.notNull(outstandingRecordsLimit);
         Validate.notNull(props.get("Region"));
+        props.remove(AGENT_NAME_KEY);
 
         this.producer = new KinesisProducer(buildKinesisProducerConfiguration(props));
         this.dispatchTimer = newTimer(buildMetricName(agentName, "kinesis.dispatch.timer"));
