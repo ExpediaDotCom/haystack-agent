@@ -40,7 +40,7 @@ public class AgentLoader {
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         final Config config = loadConfig(configProviderName, configProviderArgs, cl);
-        final List<Agent> runningAgents = loadAgents(config, cl);
+        final List<Agent> runningAgents = loadAgents(config, cl, true);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             for (final Agent agent : runningAgents) {
@@ -53,7 +53,7 @@ public class AgentLoader {
 }
 
     @VisibleForTesting
-    List<Agent> loadAgents(final Config config, ClassLoader cl) throws Exception {
+    List<Agent> loadAgents(final Config config, final ClassLoader cl, final boolean loadAgentOnSeparateThread) throws Exception {
         final ServiceLoader<Agent> agentLoader = ServiceLoader.load(Agent.class, cl);
         final List<Agent> loadedAgents = new ArrayList<>();
         for (final Agent agent : agentLoader) {
@@ -74,7 +74,11 @@ public class AgentLoader {
                 if (maybeAgent.isPresent()) {
                     final Agent agent = maybeAgent.get();
                     LOGGER.info("Initializing agent with name={} and config={}", agentName, cfg);
-                    agent.initialize(cfg.getValue());
+                    if(loadAgentOnSeparateThread) {
+                        startAgentOnSeparateThread(agent, cfg.getValue());
+                    } else {
+                        agent.initialize(cfg.getValue());
+                    }
                     runningAgents.add(agent);
                 } else {
                     missingAgents.add(agentName);
@@ -90,6 +94,16 @@ public class AgentLoader {
         }
 
         return runningAgents;
+    }
+
+    private void startAgentOnSeparateThread(final Agent agent, final Config config) {
+        new Thread(() -> {
+            try {
+                agent.initialize(config);
+            } catch (Exception e) {
+                LOGGER.error("Fail to initialize the agent with config {}", config, e);
+            }
+        }).start();
     }
 
     @VisibleForTesting
