@@ -365,7 +365,6 @@
                         </dependency>
                     </dependencies>
                     <configuration>
-                        <linkXref>true</linkXref>
                         <targetJdk>${project.jdk.version}</targetJdk>
                         <includeTests>false</includeTests>
                         <failOnViolation>${pmd.failOnViolation}</failOnViolation>
