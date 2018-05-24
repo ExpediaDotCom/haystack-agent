@@ -11,11 +11,14 @@
         <version>0.1.2-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
+    <properties>
+        <kafka.version>1.0.0</kafka.version>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.11</artifactId>
+            <artifactId>kafka_${scala.major.minor.version}</artifactId>
             <version>0.10.2.1</version>
             <exclusions>
                 <exclusion>
