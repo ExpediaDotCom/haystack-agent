@@ -3,7 +3,6 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>haystack-agent-kafka-dispatcher</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
 
     <parent>
         <artifactId>haystack-agent-core</artifactId>
@@ -11,15 +10,16 @@
         <version>0.1.2-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
+
     <properties>
-        <kafka.version>1.0.0</kafka.version>
+        <kafka.version>1.1.0</kafka.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_${scala.major.minor.version}</artifactId>
-            <version>0.10.2.1</version>
+            <version>${kafka.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-agent-api</artifactId>
-            <version>0.1.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

@@ -15,27 +15,27 @@
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-agent-api</artifactId>
-            <version>0.1.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-span-agent-provider</artifactId>
-            <version>0.1.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-agent-file-config-provider</artifactId>
-            <version>0.1.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-agent-kafka-dispatcher</artifactId>
-            <version>0.1.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-agent-kinesis-dispatcher</artifactId>
-            <version>0.1.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

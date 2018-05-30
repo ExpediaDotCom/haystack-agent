@@ -20,6 +20,7 @@ package com.expedia.www.haystack.agent.span.spi;
 import com.expedia.www.haystack.agent.core.Agent;
 import com.expedia.www.haystack.agent.core.Dispatcher;
 import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
+import com.expedia.www.haystack.agent.span.enricher.Enricher;
 import com.expedia.www.haystack.agent.span.service.SpanAgentGrpcService;
 import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
@@ -30,10 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SpanAgent implements Agent {
     private static Logger LOGGER = LoggerFactory.getLogger(SpanAgent.class);
@@ -51,11 +50,12 @@ public class SpanAgent implements Agent {
         dispatchers = loadAndInitializeDispatchers(config, Thread.currentThread().getContextClassLoader());
 
         final int port = config.getInt("port");
+        final List<Enricher> enrichers = loadSpanEnrichers(config);
 
         server = NettyServerBuilder
                 .forPort(port)
                 .directExecutor()
-                .addService(new SpanAgentGrpcService(dispatchers))
+                .addService(new SpanAgentGrpcService(dispatchers, enrichers))
                 .build()
                 .start();
 
@@ -65,6 +65,28 @@ public class SpanAgent implements Agent {
             server.awaitTermination();
         } catch (InterruptedException ex) {
             LOGGER.error("span agent server has been interrupted with exception", ex);
+        }
+    }
+
+    @VisibleForTesting
+    List<Enricher> loadSpanEnrichers(final Config config) {
+        if (config.hasPath("enrichers")) {
+            return config.getStringList("enrichers")
+                    .stream()
+                    .map(clazz -> {
+                        try {
+                            final Class c = Class.forName(clazz);
+                            LOGGER.info("Initializing the span enricher with class name '{}'", clazz);
+                            return (Enricher) c.newInstance();
+                        } catch (Exception e) {
+                            LOGGER.error("Fail to initialize the enricher with clazz name {}", clazz, e);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
         }
     }
 

@@ -22,13 +22,20 @@ import java.io.IOException
 import java.net.URL
 import java.util
 
+import com.expedia.open.tracing.Span
+import com.expedia.www.haystack.agent.span.enricher.Enricher
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{FunSpec, Matchers}
 import org.scalatest.easymock.EasyMockSugar
 
 import scala.collection.JavaConversions._
 
+class DummyEnricher extends Enricher {
+  override def apply(span: Span.Builder): Unit = ()
+}
+
 class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
+
   private val dispatcherLoadFile = "META-INF/services/com.expedia.www.haystack.agent.core.Dispatcher"
 
   describe("Span Agent") {
@@ -75,6 +82,21 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
       }
 
       caught.getMessage shouldEqual "Span agent dispatchers can't be an empty set"
+    }
+
+    it ("should load enrichers") {
+      val agent = new SpanAgent()
+      val cfg = ConfigFactory.parseString(
+        """
+          |    k1 = "v1"
+          |    port = 8080
+          |
+          |    enrichers = [
+          |       "com.expedia.www.haystack.agent.span.spi.DummyEnricher"
+          |    ]
+        """.stripMargin)
+      val enrichers = agent.loadSpanEnrichers(cfg)
+      enrichers.length shouldBe 1
     }
   }
 
