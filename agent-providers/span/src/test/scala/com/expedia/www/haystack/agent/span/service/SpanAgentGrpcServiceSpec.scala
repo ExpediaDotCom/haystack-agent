@@ -17,12 +17,15 @@
 
 package com.expedia.www.haystack.agent.span.service
 
+import java.util
 import java.util.Collections
+import java.util.function.Predicate
 
-import com.expedia.open.tracing.Span
+import com.expedia.open.tracing.{Span, Tag}
 import com.expedia.open.tracing.agent.api.DispatchResult
 import com.expedia.open.tracing.agent.api.DispatchResult.ResultCode
 import com.expedia.www.haystack.agent.core.{Dispatcher, RateLimitException}
+import com.expedia.www.haystack.agent.span.enricher.Enricher
 import io.grpc.stub.StreamObserver
 import org.easymock.EasyMock
 import org.scalatest.easymock.EasyMockSugar
@@ -35,7 +38,7 @@ class SpanAgentGrpcServiceSpec extends FunSpec with Matchers with EasyMockSugar 
       val span = Span.newBuilder().setTraceId("traceid").build()
       val dispatcher = mock[Dispatcher]
       val responseObserver = mock[StreamObserver[DispatchResult]]
-      val service = new SpanAgentGrpcService(Collections.singletonList(dispatcher))
+      val service = new SpanAgentGrpcService(Collections.singletonList(dispatcher), Collections.emptyList())
 
       val dispatchResult = EasyMock.newCapture[DispatchResult]()
       val capturedSpan = EasyMock.newCapture[Array[Byte]]()
@@ -59,7 +62,7 @@ class SpanAgentGrpcServiceSpec extends FunSpec with Matchers with EasyMockSugar 
       val span = Span.newBuilder().setTraceId("traceid").build()
       val dispatcher = mock[Dispatcher]
       val responseObserver = mock[StreamObserver[DispatchResult]]
-      val service = new SpanAgentGrpcService(Collections.singletonList(dispatcher))
+      val service = new SpanAgentGrpcService(Collections.singletonList(dispatcher), Collections.emptyList())
 
       val dispatchResult = EasyMock.newCapture[DispatchResult]()
       val capturedSpan = EasyMock.newCapture[Array[Byte]]()
@@ -85,7 +88,7 @@ class SpanAgentGrpcServiceSpec extends FunSpec with Matchers with EasyMockSugar 
       val span = Span.newBuilder().setTraceId("traceid").build()
       val dispatcher = mock[Dispatcher]
       val responseObserver = mock[StreamObserver[DispatchResult]]
-      val service = new SpanAgentGrpcService(Collections.singletonList(dispatcher))
+      val service = new SpanAgentGrpcService(Collections.singletonList(dispatcher), Collections.emptyList())
 
       val dispatchResult = EasyMock.newCapture[DispatchResult]()
       val capturedSpan = EasyMock.newCapture[Array[Byte]]()
@@ -109,9 +112,46 @@ class SpanAgentGrpcServiceSpec extends FunSpec with Matchers with EasyMockSugar 
 
     it("should fail in constructing grpc service object if no dispatchers exist") {
       val caught = intercept[Exception] {
-        new SpanAgentGrpcService(Collections.emptyList())
+        new SpanAgentGrpcService(Collections.emptyList(), Collections.emptyList())
       }
       caught.getMessage shouldEqual "Dispatchers can't be empty"
+    }
+
+    it("should enrich the span before dispatch") {
+      val span = Span.newBuilder().setTraceId("traceid").build()
+      val dispatcher = mock[Dispatcher]
+      val responseObserver = mock[StreamObserver[DispatchResult]]
+      val service = new SpanAgentGrpcService(Collections.singletonList(dispatcher), util.Arrays.asList(new Enricher {
+        override def apply(span: Span.Builder): Unit = {
+          span.addTags(Tag.newBuilder().setKey("ip").setType(Tag.TagType.STRING).setVStr("10.1.10.1"))
+        }
+      }, new Enricher {
+        override def apply(span: Span.Builder): Unit = {
+          span.addTags(Tag.newBuilder().setKey("region").setType(Tag.TagType.STRING).setVStr("us-east-1"))
+        }
+      }))
+
+      val dispatchResult = EasyMock.newCapture[DispatchResult]()
+      val capturedSpan = EasyMock.newCapture[Array[Byte]]()
+      val capturedSpanPartitionKey = EasyMock.newCapture[Array[Byte]]()
+
+      expecting {
+        dispatcher.getName.andReturn("test-dispatcher").anyTimes()
+        dispatcher.dispatch(EasyMock.capture(capturedSpanPartitionKey), EasyMock.capture(capturedSpan))
+        responseObserver.onNext(EasyMock.capture(dispatchResult)).once()
+        responseObserver.onCompleted().once()
+      }
+
+      whenExecuting(dispatcher, responseObserver) {
+        service.dispatch(span, responseObserver)
+        capturedSpanPartitionKey.getValue shouldBe span.getTraceId.getBytes("utf-8")
+        val enrichedSpan = Span.parseFrom(capturedSpan.getValue)
+        enrichedSpan.getTraceId shouldBe "traceid"
+        enrichedSpan.getTags(0).getKey shouldBe "ip"
+        enrichedSpan.getTags(0).getVStr shouldBe "10.1.10.1"
+        enrichedSpan.getTags(1).getKey shouldBe "region"
+        enrichedSpan.getTags(1).getVStr shouldBe "us-east-1"
+      }
     }
   }
 }

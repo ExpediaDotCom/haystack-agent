@@ -25,6 +25,7 @@ import com.expedia.open.tracing.agent.api.SpanAgentGrpc;
 import com.expedia.www.haystack.agent.core.Dispatcher;
 import com.expedia.www.haystack.agent.core.RateLimitException;
 import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
+import com.expedia.www.haystack.agent.span.enricher.Enricher;
 import io.grpc.stub.StreamObserver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -40,10 +41,12 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
     private final List<Dispatcher> dispatchers;
     private final Timer dispatchTimer;
     private final Meter dispatchFailureMeter;
+    private final List<Enricher> enrichers;
 
-    public SpanAgentGrpcService(final List<Dispatcher> dispatchers) {
+    public SpanAgentGrpcService(final List<Dispatcher> dispatchers, final List<Enricher> enrichers) {
         Validate.notEmpty(dispatchers, "Dispatchers can't be empty");
         this.dispatchers = dispatchers;
+        this.enrichers = enrichers;
         dispatchTimer = SharedMetricRegistry.newTimer("span.agent.dispatch.timer");
         dispatchFailureMeter = SharedMetricRegistry.newMeter("span.agent.dispatch.failures");
     }
@@ -55,9 +58,11 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
 
         final Timer.Context timer = dispatchTimer.time();
 
+        final Span enrichedSpan = enrichSpan(span);
+
         for(final Dispatcher d : dispatchers) {
             try {
-                d.dispatch(span.getTraceId().getBytes("utf-8"), span.toByteArray());
+                d.dispatch(enrichedSpan.getTraceId().getBytes("utf-8"), enrichedSpan.toByteArray());
             } catch (RateLimitException r) {
                 result.setCode(DispatchResult.ResultCode.RATE_LIMIT_ERROR);
                 dispatchFailureMeter.mark();
@@ -80,5 +85,17 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
         timer.close();
         responseObserver.onNext(result.build());
         responseObserver.onCompleted();
+    }
+
+    private Span enrichSpan(final Span span) {
+        if(enrichers.isEmpty()) {
+            return span;
+        } else {
+            final Span.Builder transformedSpanBuilder = span.toBuilder();
+            for (final Enricher enricher : enrichers) {
+                enricher.apply(transformedSpanBuilder);
+            }
+            return transformedSpanBuilder.build();
+        }
     }
 }

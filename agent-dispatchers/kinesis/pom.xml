@@ -29,7 +29,7 @@
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>haystack-agent-api</artifactId>
-            <version>0.1.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
