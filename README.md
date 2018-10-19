@@ -2,21 +2,22 @@
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/ExpediaDotCom/haystack/blob/master/LICENSE)
 
 # haystack-agent
-This repo contains haystack-agent that can be run as a side-car container or a standalone agent on the same host of micro service application.
-One need to add the haystack [client library](https://github.com/ExpediaDotCom/haystack-client-java) in the application to push the spans to this agent running locally(or a side car container).
+This repo contains haystack-agent, which can be run as a side-car container or a standalone agent on the host on which
+your micro service is running. One needs to add the haystack 
+[client library](https://github.com/ExpediaDotCom/haystack-client-java) in the application to push the spans to the
+agent.
 
-The haystack span-agent runs as a grpc server that accepts the [spans](https://github.com/ExpediaDotCom/haystack-idl). 
-It collects the spans and dispatch them to one or more sinks e.g. kafka, aws kinesis etc. depending upon the configuration.
-
-We provide couple of dispatchers out of the box for e.g kafka and aws kinesis. 
-We strongly encourage open source community to contribute dispatchers in this repo. 
-However one is free to use these agent libraries published in maven central to write custom agents or dispatchers in a private repo.
-
+The span listener of haystack-agent runs as a GRPC server that accepts 
+[spans](https://github.com/ExpediaDotCom/haystack-idl/blob/master/proto/span.proto). It collects the spans and 
+dispatches them to one or more sinks, depending upon the configuration. Typical sinks are Kafka and AWS Kinesis;
+dispatchers for these two sinks are provided "out of the box" in this repository. We strongly encourage the open source 
+community to contribute additional dispatchers to this repo, but developers are free to write custom dispatchers
+in a private repository.
 
 # Architecture
 The haystack-agent uses the [SPI](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html) design architecture.
-The fat jar that gets built of this code contains single agent providers with two dispatchers (kinesis and kafka) discussed in more detail below. 
-However design allows to add more agent and dispatcher providers. 
+The fat jar that gets built from this code contains single agent providers with two dispatchers (kinesis and Kafka),
+as mentioned above and discussed in more detail below.  
 The agents are loaded depending upon the configuration that can be provided via a http endpoint or a local file like
 
 ```
@@ -24,18 +25,16 @@ java -jar bundlers/haystack-agent/target/haystack-agent-<version>.jar --config-p
 ```
 
 The main method in AgentLoader class loads and initializes the agents using ServiceLoader.load(). 
-Each agent further loads the configured dispatchers using the same ServiceLoader.load() mechanism and everything is controlled through configuration.
-
-
+Each agent further loads the configured dispatchers using the same ServiceLoader.load() mechanism and everything is 
+controlled through configuration.
 
 ### Haystack Agent Configuration
-The configuration readers are also implemented using the SPI design model. 
-For now, we are only using file config provider that is implemented [here](https://github.com/ExpediaDotCom/haystack-agent/tree/master/config-providers/file).
-
-Following is an example configuration that loads a single agent providers that reads the spans(proto) over grpc.
-This span agent spins up a grpc server listening on different ports 34000 and publish them to kinesis and kafka as per configuration below. 
-
-The app or microservice need to use a grpc client to send messages to this haystack-agent.
+The configuration readers are also implemented using the SPI design model. For now, we are only using file config 
+provider that is implemented [here](https://github.com/ExpediaDotCom/haystack-agent/tree/master/config-providers/file).
+Below is an example configuration that loads a single agent provider that reads protobuf spans over GRPC.
+This span agent spins up a GRPC server listening on port 34000 and publishes, via the configured dispatchers. The
+sample configuration below configures both a Kinesis and a Kafka dispatcher. The app or microservice needs to use a GRPC 
+client to send messages to this haystack-agent.
 
 ```
 agents {
@@ -47,12 +46,12 @@ agents {
       kinesis {
         Region = us-west-2
         StreamName = spans
-        OutstandingRecordsLimit =10000
+        OutstandingRecordsLimit = 10000
         MetricsLevel = none
       }
       
-      kafka {
-        bootstrap.servers = kafka-svc:9092
+      Kafka {
+        bootstrap.servers = Kafka-svc:9092
         producerTopic = spans
       }
     }
@@ -64,64 +63,88 @@ agents {
 We have one agent provider today that is loaded depending upon the configuration as above.
 
 ### Span Proto Agent
-This agent listens as a grpc server on a configurable port and accepts the [span proto](https://github.com/ExpediaDotCom/haystack-idl/tree/master/proto/agent) from the clients. 
-The span agent is already implemented in the open source repo and it supports both kinesis and kafka dispatchers.
-Please note we only bundle this span-agent and kinesis dispatcher in our fat jar. 
+This agent listens as a GRPC server on a configurable port and accepts the protobuf span from the clients. The span 
+agent is already implemented in the open source repo and it supports both kinesis and Kafka dispatchers. Please note 
+that we bundle only this span proto agent and the AWS Kinesis dispatcher in our fat jar. 
 
 ## Dispatchers
 
 ### Kinesis Dispatcher
-Kinesis dispatcher uses [KPL](https://github.com/awslabs/amazon-kinesis-producer) and we require following mandatory configuration properties for it to work. 
-```
-a. Region - aws region for e.g. us-west-2
-b. StreamName - name of kinesis stream where spans will be published
-c. OutstandingRecordsLimit - maximum pending records that are still not published to kinesis. If agent receives more dispatch requests, then it sends back 'RATE_LIMIT_ERROR' in grpc response.
-d. AwsAccessKey
-   AwsSecretKey - Optional, use them if you want to connect using static aws access and secret keys
-e. StsRoleArn - Optional, use it if you want to provide crendetials by assuming a role
+Kinesis dispatcher uses [KPL](https://github.com/awslabs/amazon-kinesis-producer) and we require the following 
+configuration properties for it to work properly: 
 
-You can also provide AWS_ACCESS_KEY and AWS_SECRET_KEY as java system property or environment variable or use the IAM role for connecting to Kinesis - DefaultCredentialProvider.
-```
+1. Region - AWS region for e.g. us-west-2
+2. StreamName - name of kinesis stream where spans will be published
+3. OutstandingRecordsLimit - maximum pending records that are still not published to kinesis. If agent receives more 
+dispatch requests, then it sends back 'RATE_LIMIT_ERROR' in the GRPC response.
+4. AWS keys - Optional, use them if you want to connect using static AWS access and secret keys
+  * AwsAccessKey
+  * AwsSecretKey 
+5. StsRoleArn - Optional, use it if you want to provide credentials by assuming a role
 
-Kinesis dispatcher can be configured with other [KPL properties](https://github.com/awslabs/amazon-kinesis-producer/blob/master/java/amazon-kinesis-producer-sample/default_config.properties) in the same way as we do with 'Region'
+You can also provide AWS_ACCESS_KEY and AWS_SECRET_KEY as java system property values, or environment variable, 
+or use the IAM role for connecting to Kinesis with a DefaultCredentialProvider.
 
+The Kinesis dispatcher can be configured with other 
+[KPL properties](https://github.com/awslabs/amazon-kinesis-producer/blob/master/java/amazon-kinesis-producer-sample/default_config.properties)
+ in the same way as we do with 'Region'
 
 ### Kafka Dispatcher
-Kafka dispatcher uses high level kafka producer to write the spans to kafka topic. 
-The dispatcher  expects a partition key and the span-agent uses the [TraceId](https://github.com/ExpediaDotCom/haystack-idl/blob/master/proto/span.proto) in span proto object for the same.
+The Kafka dispatcher uses high level Kafka producer to write the spans to Kafka topic. 
+The dispatcher expects a partition key, and the span-agent uses the 
+[TraceId](https://github.com/ExpediaDotCom/haystack-idl/blob/master/proto/span.proto) in the span proto object as the
+partition key.
 
 ```
-a. producerTopic - kafka topic
+a. producerTopic - Kafka topic
 b. bootstrap.servers - set of bootstrap servers
 
 ```
-Kafka dispatcher can be configured with other kafka producer properties in the same way as we do with bootstrap.servers.
-
+The Kafka dispatcher can be configured with other Kafka producer properties in the same way as bootstrap.servers.
 
 ## How to build code?
 
-####
+#### Clone
 Since this repo contains haystack-idl as the submodule, so use the following to clone the repo
 * git clone --recursive git@github.com:ExpediaDotCom/haystack-agent.git .
 
-####Prerequisite: 
+#### Prerequisites: 
 
 * Make sure you have Java 1.8
 * Make sure you have maven 3.3.9 or higher
 * Make sure you have docker 1.13 or higher
 
+Note : For Mac users you can download docker for Mac to set you up for the last two steps.
 
-Note : For mac users you can download docker for mac to set you up for the last two steps.
-
-####Build
+#### Build
 
 For a full build, including unit tests you can run -
 ```
 mvn clean package
 ```
-####How to run locally?
-Edit dev.conf and set the kafka endpoint correctly and then run
+#### How to run locally?
+Edit dev.conf and set the Kafka endpoint correctly and then run
 ```
 java -jar bundlers/haystack-agent/target/haystack-agent-<version>.jar --config-provider file --file-path docker/dev.conf
 ```
-This will spin up grpc server on port 8080
+This will spin up GRPC server on port 8080
+
+### Releases
+1. Decide what kind of version bump is necessary, based on [Semantic Versioning](http://semver.org/) conventions.
+In the items below, the version number you select will be referred to as `x.y.z`.
+2. Update **all** pom.xml files in this project, changing the version element to `<version>x.y.z-SNAPSHOT</version>`. 
+Note the `-SNAPSHOT` suffix.
+3. Make your code changes, including unit tests.
+4. Update the
+[ReleaseNotes.md]((https://github.com/ExpediaDotCom/haystack-agent/blob/master/ReleaseNotes.md))
+file with details of your changes.
+5. Create a pull request with your changes.
+6. Ask for a review of the pull request; when it is approved, the Travis CI build will upload the resulting jar file
+to the [SonaType Staging Repository](https://oss.sonatype.org/#stagingRepositories).
+7. Tag the build with the version number: from a command line, executed in the root directory of the project:
+```
+git tag x.y.z
+git push --tags
+```
+This will cause the jar file to be released to the 
+[SonaType Release Repository](https://oss.sonatype.org/#nexus-search;quick~haystack-agent).
