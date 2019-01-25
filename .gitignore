@@ -1,5 +1,7 @@
 *.class
 *.iml
+*.ipr
+*.iws
 *.log
 .classpath
 .project
