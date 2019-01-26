@@ -14,22 +14,10 @@ before_install:
   - if [ ! -z "$GPG_OWNERTRUST" ]; then echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust; fi
 
 deploy:
-  -
-    provider: script
-    script: .travis/deploy.sh
-    skip_cleanup: true
-    on:
-      repo: ExpediaDotCom/haystack-agent
-      branch: master
-      jdk: oraclejdk8
-  -
-    provider: script
-    script: .travis/deploy.sh
-    skip_cleanup: true
-    on:
-      repo: ExpediaDotCom/haystack-agent
-      tags: true
-      jdk: oraclejdk8
+  script:
+    # build, create docker image
+    # upload to dockerhub only for master(non PR) and tag scenario
+    - if ([ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]) || [ -n "$TRAVIS_TAG" ];  then .travis/deploy.sh; fi
 
 notifications:
   email:

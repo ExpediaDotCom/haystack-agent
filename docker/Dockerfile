@@ -17,4 +17,4 @@ WORKDIR ${APP_HOME}
 
 ENTRYPOINT ["./start-app.sh"]
 
-CMD ["--config-provider", "file", "--file-path", "/app/bin/dev.conf"]
+CMD ["--config-provider", "file", "--file-path", "/app/bin/default.conf"]
