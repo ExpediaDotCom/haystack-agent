@@ -37,8 +37,8 @@
                         </goals>
                         <configuration>
                             <environmentVariables>
-                                <haystack_env_agents_spans_k1>v2</haystack_env_agents_spans_k1>
-                                <haystack_env_agents_spans_other>100</haystack_env_agents_spans_other>
+                                <HAYSTACK_PROP_AGENTS_SPANS_K1>v2</HAYSTACK_PROP_AGENTS_SPANS_K1>
+                                <HAYSTACK_PROP_AGENTS_SPANS_OTHER>100</HAYSTACK_PROP_AGENTS_SPANS_OTHER>
                             </environmentVariables>
                         </configuration>
                     </execution>
