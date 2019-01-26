@@ -8,7 +8,7 @@ RUN mkdir -p ${APP_HOME}
 
 COPY bundlers/haystack-agent/target/${APP_NAME}.jar ${APP_HOME}/
 
-COPY docker/dev.conf ${APP_HOME}/
+COPY docker/default.conf ${APP_HOME}/
 COPY docker/start-app.sh ${APP_HOME}/
 
 RUN chmod +x ${APP_HOME}/start-app.sh
