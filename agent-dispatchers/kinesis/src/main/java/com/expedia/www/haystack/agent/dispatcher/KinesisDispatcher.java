@@ -20,9 +20,11 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.auth.profile.internal.securitytoken.RoleInfo;
 import com.amazonaws.auth.profile.internal.securitytoken.STSProfileCredentialsServiceProvider;
 import com.amazonaws.services.kinesis.producer.*;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.expedia.www.haystack.agent.core.Dispatcher;
@@ -143,7 +145,15 @@ public class KinesisDispatcher implements Dispatcher {
         final Object awsAccessKey = conf.remove(AWS_ACCESS_KEY);
         final Object awsSecretKey = conf.remove(AWS_SECRET_KEY);
 
-        if (Objects.nonNull(awsAccessKey) && Objects.nonNull(awsSecretKey)) {
+        if (Objects.nonNull(awsAccessKey) && Objects.nonNull(awsSecretKey) && Objects.nonNull(stsRoleArn)) {
+            return new STSAssumeRoleSessionCredentialsProvider.Builder(stsRoleArn.toString(), "haystack-agent")
+                .withStsClient(
+                    AWSSecurityTokenServiceClientBuilder.standard()
+                        .withCredentials(
+                            new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKey.toString(), awsSecretKey.toString()))
+                        ).build()
+                ).build();
+        } else if (Objects.nonNull(awsAccessKey) && Objects.nonNull(awsSecretKey)) {
             LOGGER.info("Using static credential provider using aws access and secret keys");
             return new AWSStaticCredentialsProvider(
                     new BasicAWSCredentials(awsAccessKey.toString(), awsSecretKey.toString()));
