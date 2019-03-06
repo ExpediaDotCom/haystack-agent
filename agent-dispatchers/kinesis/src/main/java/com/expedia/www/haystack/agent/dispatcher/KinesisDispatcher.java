@@ -57,6 +57,7 @@ public class KinesisDispatcher implements Dispatcher {
     static final String STS_ROLE_ARN = "StsRoleArn";
     static final String AWS_ACCESS_KEY = "AwsAccessKey";
     static final String AWS_SECRET_KEY = "AwsSecretKey";
+    static final String AWS_REGION = "Region";
 
     Timer dispatchTimer;
     Meter dispatchFailureMeter;
@@ -96,7 +97,7 @@ public class KinesisDispatcher implements Dispatcher {
 
         Validate.notNull(streamName);
         Validate.notNull(outstandingRecordsLimit);
-        Validate.notNull(props.get("Region"));
+        Validate.notNull(props.get(AWS_REGION));
         props.remove(AGENT_NAME_KEY);
 
         this.producer = new KinesisProducer(buildKinesisProducerConfiguration(props));
@@ -151,7 +152,9 @@ public class KinesisDispatcher implements Dispatcher {
                     AWSSecurityTokenServiceClientBuilder.standard()
                         .withCredentials(
                             new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKey.toString(), awsSecretKey.toString()))
-                        ).build()
+                        )
+                        .withRegion(conf.get(AWS_REGION))
+                        .build()
                 ).build();
         } else if (Objects.nonNull(awsAccessKey) && Objects.nonNull(awsSecretKey)) {
             LOGGER.info("Using static credential provider using aws access and secret keys");
