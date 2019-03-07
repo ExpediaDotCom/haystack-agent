@@ -66,7 +66,8 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
             } catch (RateLimitException r) {
                 result.setCode(DispatchResult.ResultCode.RATE_LIMIT_ERROR);
                 dispatchFailureMeter.mark();
-                LOGGER.error("Fail to dispatch the span record due to rate limit errors", r);
+                LOGGER.error("Failed to dispatch the span record due to rate limit errors");
+                LOGGER.warn("Failed to dispatch the span record due to rate limit errors", r);
                 failedDispatchers.append(d.getName()).append(',');
             }
             catch (Exception ex) {
