@@ -38,15 +38,15 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.expedia.www.haystack.agent.core.config.ConfigurationHelpers.AGENT_NAME_KEY;
 import static com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry.*;
 
+@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.StdCyclomaticComplexity", "PMD.ModifiedCyclomaticComplexity"})
 public class KinesisDispatcher implements Dispatcher {
     private final static Logger LOGGER = LoggerFactory.getLogger(KinesisDispatcher.class);
 
@@ -132,8 +132,7 @@ public class KinesisDispatcher implements Dispatcher {
     @VisibleForTesting
     KinesisProducerConfiguration buildKinesisProducerConfiguration(final Map<String, String> conf) {
         final AWSCredentialsProvider credsProvider = buildCredsProvider(conf);
-        return KinesisProducerConfiguration
-                .fromProperties(ConfigurationHelpers.generatePropertiesFromMap(conf))
+        return fromProperties(ConfigurationHelpers.generatePropertiesFromMap(conf))
                 .setCredentialsProvider(credsProvider);
     }
 
@@ -201,5 +200,41 @@ public class KinesisDispatcher implements Dispatcher {
         } else {
             return "none";
         }
+    }
+
+    private static KinesisProducerConfiguration fromProperties(final Properties props) {
+        KinesisProducerConfiguration config = new KinesisProducerConfiguration();
+        Enumeration<?> propNames = props.propertyNames();
+        while (propNames.hasMoreElements()) {
+            boolean found = false;
+            String key = propNames.nextElement().toString();
+            String value = props.getProperty(key);
+            for (Method method : KinesisProducerConfiguration.class.getMethods()) {
+                if (method.getName().equalsIgnoreCase("set" + key)) {
+                    found = true;
+                    Class<?> type = method.getParameterTypes()[0];
+                    try {
+                        if (type == long.class) {
+                            method.invoke(config, Long.valueOf(value));
+                        } else if (type == int.class) {
+                            method.invoke(config, Integer.valueOf(value));
+                        } else if (type == boolean.class) {
+                            method.invoke(config, Boolean.valueOf(value));
+                        } else if (type == String.class) {
+                            method.invoke(config, value);
+                        }
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException(
+                                String.format("Error trying to set field %s with the value '%s'", key, value), e);
+                    }
+                }
+            }
+            if (!found) {
+                LOGGER.warn("Property " + key + " ignored as there is no corresponding set method in " +
+                        KinesisProducerConfiguration.class.getSimpleName());
+            }
+        }
+
+        return config;
     }
 }

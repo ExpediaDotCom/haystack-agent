@@ -28,9 +28,14 @@ public class ConfigurationHelpers {
     // it can be used by the logger or build metric names with agent name as prefix
     public static String AGENT_NAME_KEY = "agentName";
 
-    private final static String HAYSTACK_AGENT_ENV_VAR_PREFIX = "HAYSTACK_PROP_";
+    private final static String DEFAULT_HAYSTACK_AGENT_ENV_VAR_PREFIX = "HAYSTACK_PROP_";
+    private static String envVarPrefix = DEFAULT_HAYSTACK_AGENT_ENV_VAR_PREFIX; 
 
     private ConfigurationHelpers() { /* suppress pmd violation */ }
+
+    public static void setEnvVarPrefix(final String prefix) {
+       envVarPrefix = prefix; 
+    } 
 
     /**
      * convert the map of [string,string] to properties object
@@ -103,7 +108,7 @@ public class ConfigurationHelpers {
     }
 
     private static boolean isHaystackAgentEnvVar(final String envKey) {
-        return envKey.startsWith(HAYSTACK_AGENT_ENV_VAR_PREFIX);
+        return envKey.startsWith(envVarPrefix);
     }
 
     private static Config loadFromEnvVars() {
@@ -111,7 +116,7 @@ public class ConfigurationHelpers {
         System.getenv().entrySet().stream()
                 .filter((e) -> isHaystackAgentEnvVar(e.getKey()))
                 .forEach((e) -> {
-                    final String normalizedKey = e.getKey().replaceFirst(HAYSTACK_AGENT_ENV_VAR_PREFIX, "")
+                    final String normalizedKey = e.getKey().replaceFirst(envVarPrefix, "")
                             .replace('_', '.').toLowerCase();
                     envMap.put(normalizedKey, e.getValue());
                 });
