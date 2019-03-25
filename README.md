@@ -21,7 +21,7 @@ as mentioned above and discussed in more detail below.
 The agents are loaded depending upon the configuration that can be provided via a http endpoint or a local file like
 
 ```
-java -jar bundlers/haystack-agent/target/haystack-agent-<version>.jar --config-provider file --file-path docker/dev.conf
+java -jar bundlers/haystack-agent/target/haystack-agent-<version>.jar --config-provider file --file-path docker/default.conf
 ```
 
 The main method in AgentLoader class loads and initializes the agents using ServiceLoader.load(). 
@@ -50,13 +50,31 @@ agents {
         MetricsLevel = none
       }
       
-      Kafka {
-        bootstrap.servers = Kafka-svc:9092
-        producerTopic = spans
+      kafka {
+        bootstrap.servers = kafka-svc:9092
+        producer.topic = spans
       }
     }
   }
 }
+```
+
+## How to run agent as docker?
+Build the docker image of haystack-agent with 
+```
+cp bundlers/haystack-agent/target/haystack-agent-*SNAPSHOT.jar bundlers/haystack-agent/target/haystack-agent.jar
+docker build -t haystack-agent:latest -f docker/Dockerfile .
+
+```
+
+and run it as a docker container with
+```
+docker run -e HAYSTACK_PROP_AGENTS_SPANS_DISPATCHERS_KAFKA_BOOTSTRAP_SERVERS=localhost:9092 haystack-agent:latest
+```
+
+We bundle default [configuration](./docker/default.conf) with haystack-agent's docker image. However, you can override or add any property using environment variables by adding a prefix 'HAYSTACK_PROP_'. For e.g. if you want to change the kafka producer topic then use 
+```
+HAYSTACK_PROP_AGENTS_SPANS_DISPATCHERS_KAFKA_PRODUCER_TOPIC=sometopic
 ```
 
 ## Agent Providers
@@ -96,7 +114,7 @@ The dispatcher expects a partition key, and the span-agent uses the
 partition key.
 
 ```
-a. producerTopic - Kafka topic
+a. producer.topic - Kafka topic
 b. bootstrap.servers - set of bootstrap servers
 
 ```
