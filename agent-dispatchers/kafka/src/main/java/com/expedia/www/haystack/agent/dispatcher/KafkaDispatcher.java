@@ -38,7 +38,7 @@ import static com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry.*
 public class KafkaDispatcher implements Dispatcher {
     private final static Logger LOGGER = LoggerFactory.getLogger(KafkaDispatcher.class);
 
-    private final static String PRODUCER_TOPIC = "producerTopic";
+    private final static String PRODUCER_TOPIC = "producer.topic";
 
     Timer dispatchTimer;
     Meter dispatchFailure;

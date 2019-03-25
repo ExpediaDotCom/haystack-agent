@@ -79,7 +79,7 @@ class KafkaDispatcherSpec extends FunSpec with Matchers with EasyMockSugar {
       val caught = intercept[Exception] {
         kafka.initialize(config)
       }
-      caught.getMessage shouldEqual "No configuration setting found for key 'producerTopic'"
+      caught.getMessage shouldEqual "No configuration setting found for key 'producer'"
     }
   }
 }
