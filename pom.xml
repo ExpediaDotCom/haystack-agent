@@ -69,7 +69,7 @@
         <protobuf.version>3.4.0</protobuf.version>
         <logback.version>1.2.3</logback.version>
         <slf4j-api.version>1.7.25</slf4j-api.version>
-        <jackson.version>2.9.8</jackson.version>
+        <jackson.version>2.9.9</jackson.version>
         <commons-lang.version>3.4</commons-lang.version>
         <grpc.version>1.7.0</grpc.version>
         <metrics-core.version>3.2.5</metrics-core.version>
