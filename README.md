@@ -54,6 +54,13 @@ agents {
         bootstrap.servers = kafka-svc:9092
         producer.topic = spans
       }
+      
+      http {
+        url = http://collector-svc:8080/spans
+        callTimeoutMillis = 500
+        connectionPool.maxIdleConnections = 5
+        connectionPool.keepAliveDurationMinutes = 5
+      }
     }
   }
 }
@@ -119,6 +126,17 @@ b. bootstrap.servers - set of bootstrap servers
 
 ```
 The Kafka dispatcher can be configured with other Kafka producer properties in the same way as bootstrap.servers.
+
+### HTTP Dispatcher
+The HTTP dispatcher uses an http client to post spans to a remote collector. 
+
+```
+a. url - url for the http span collector (eg: http://collector-svc:8080/spans)
+b. callTimeoutMillis - timeout in milliseconds for reporting spans to the collector. Defaults to 500 ms.
+b. connectionPool.maxIdleConnections - number of idle connections to keep in the connection pool. Defaults to 5
+b. connectionPool.keepAliveDurationMinutes - keep alive duration in minutes for connections in the connection pool. Defaults to 5.
+
+```
 
 ## How to build code?
 
