@@ -37,6 +37,11 @@
             <artifactId>haystack-agent-kinesis-dispatcher</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.expedia.www</groupId>
+            <artifactId>haystack-agent-http-dispatcher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <properties>
