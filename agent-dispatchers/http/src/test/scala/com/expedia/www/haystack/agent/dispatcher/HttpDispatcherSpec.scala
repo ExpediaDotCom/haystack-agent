@@ -153,7 +153,7 @@ class HttpDispatcherSpec extends FunSpec with Matchers with EasyMockSugar {
       val config = ConfigFactory.parseString(
         """
           | url: "http://test:8080"
-          | client.timeoutmillis: 123
+          | client.timeout.millis: 123
         """.stripMargin)
 
       dispatcher.initialize(config)

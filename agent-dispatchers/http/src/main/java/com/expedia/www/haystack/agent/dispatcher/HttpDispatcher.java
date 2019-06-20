@@ -43,9 +43,9 @@ public class HttpDispatcher implements Dispatcher {
 
     private static final MediaType PROTOBUF = MediaType.get("application/octet-stream");
     private static final String URL = "url";
-    private static final String CALL_TIMEOUT_IN_MILLIS = "client.timeoutmillis";
-    private static final String MAX_IDLE_CONNECTIONS = "client.connectionpool.idleconnections.max";
-    private static final String KEEP_ALIVE_DURATION_IN_MINUTES = "client.connectionpool.keepaliveminutes";
+    private static final String CALL_TIMEOUT_IN_MILLIS = "client.timeout.millis";
+    private static final String MAX_IDLE_CONNECTIONS = "client.connectionpool.idle.max";
+    private static final String KEEP_ALIVE_DURATION_IN_MINUTES = "client.connectionpool.keepalive.minutes";
 
     Timer dispatchTimer;
     Meter dispatchFailure;

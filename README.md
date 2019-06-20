@@ -57,9 +57,9 @@ agents {
       
       http {
         url = http://collector-svc:8080/spans
-        client.timeoutmillis = 500
-        client.connectionpool.idleconnections.max = 5
-        client.connectionpool.keepaliveminutes = 5
+        client.timeout.millis = 500
+        client.connectionpool.idle.max = 5
+        client.connectionpool.keepalive.minutes = 5
       }
     }
   }
@@ -132,9 +132,9 @@ The HTTP dispatcher uses an http client to post spans to a remote collector.
 
 ```
 a. url - url for the http span collector (eg: http://collector-svc:8080/spans)
-b. callTimeoutMillis - timeout in milliseconds for reporting spans to the collector. Defaults to 500 ms.
-b. connectionPool.maxIdleConnections - number of idle connections to keep in the connection pool. Defaults to 5
-b. connectionPool.keepAliveDurationMinutes - keep alive duration in minutes for connections in the connection pool. Defaults to 5.
+b. client.timeout.millis - timeout in milliseconds for reporting spans to the collector. Defaults to 500 ms.
+b. client.connectionpool.idle.max - number of idle connections to keep in the connection pool. Defaults to 5
+b. client.connectionpool.keepalive.minutes - keep alive duration in minutes for connections in the connection pool. Defaults to 5.
 
 ```
 
