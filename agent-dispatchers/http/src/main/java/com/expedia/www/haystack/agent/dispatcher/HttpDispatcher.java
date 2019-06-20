@@ -39,13 +39,13 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class HttpDispatcher implements Dispatcher {
-    private final static Logger LOGGER = LoggerFactory.getLogger(HttpDispatcher.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpDispatcher.class);
 
     private static final MediaType PROTOBUF = MediaType.get("application/octet-stream");
-    private final static String URL = "url";
-    private final static String CALL_TIMEOUT_IN_MILLIS = "callTimeoutMillis";
-    private final static String MAX_IDLE_CONNECTIONS = "connectionPool.maxIdleConnections";
-    private final static String KEEP_ALIVE_DURATION_IN_MINUTES = "connectionPool.keepAliveDurationMinutes";
+    private static final String URL = "url";
+    private static final String CALL_TIMEOUT_IN_MILLIS = "client.timeoutmillis";
+    private static final String MAX_IDLE_CONNECTIONS = "client.connectionpool.idleconnections.max";
+    private static final String KEEP_ALIVE_DURATION_IN_MINUTES = "client.connectionpool.keepaliveminutes";
 
     Timer dispatchTimer;
     Meter dispatchFailure;
@@ -72,6 +72,7 @@ public class HttpDispatcher implements Dispatcher {
                 LOGGER.error("Fail to post the record to the http collector with status code {}", response.code());
             }
         } catch (Exception e) {
+            dispatchFailure.mark();
             LOGGER.error("Fail to post the record to the http collector", e);
         }
     }
@@ -92,7 +93,7 @@ public class HttpDispatcher implements Dispatcher {
     }
 
     private OkHttpClient buildClient(Config config) {
-        final int callTimeoutInMilliseconds = config.hasPath(CALL_TIMEOUT_IN_MILLIS) ? config.getInt(CALL_TIMEOUT_IN_MILLIS) : 500;
+        final int callTimeoutInMilliseconds = config.hasPath(CALL_TIMEOUT_IN_MILLIS) ? config.getInt(CALL_TIMEOUT_IN_MILLIS) : 1000;
         final int maxIdleConnections = config.hasPath(MAX_IDLE_CONNECTIONS) ? config.getInt(MAX_IDLE_CONNECTIONS) : 5;
         final int keepAliveDuration = config.hasPath(KEEP_ALIVE_DURATION_IN_MINUTES) ? config.getInt(KEEP_ALIVE_DURATION_IN_MINUTES) : 5;
 

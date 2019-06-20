@@ -57,9 +57,9 @@ agents {
       
       http {
         url = http://collector-svc:8080/spans
-        callTimeoutMillis = 500
-        connectionPool.maxIdleConnections = 5
-        connectionPool.keepAliveDurationMinutes = 5
+        client.timeoutmillis = 500
+        client.connectionpool.idleconnections.max = 5
+        client.connectionpool.keepaliveminutes = 5
       }
     }
   }
