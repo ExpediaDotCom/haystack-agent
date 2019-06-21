@@ -14,6 +14,7 @@
         <module>agent-providers/span</module>
         <module>agent-dispatchers/kafka</module>
         <module>agent-dispatchers/kinesis</module>
+        <module>agent-dispatchers/http</module>
         <module>bundlers/haystack-agent</module>
     </modules>
 
