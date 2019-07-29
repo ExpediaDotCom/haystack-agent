@@ -19,6 +19,20 @@ package com.expedia.www.haystack.agent.span.enricher;
 
 import com.expedia.open.tracing.Span;
 
+import java.util.List;
+
 public interface Enricher {
     void apply(final Span.Builder span);
+
+    static Span enrichSpan(final Span span, List<Enricher> enrichers) {
+        if(enrichers.isEmpty()) {
+            return span;
+        } else {
+            final Span.Builder transformedSpanBuilder = span.toBuilder();
+            for (final Enricher enricher : enrichers) {
+                enricher.apply(transformedSpanBuilder);
+            }
+            return transformedSpanBuilder.build();
+        }
+    }
 }

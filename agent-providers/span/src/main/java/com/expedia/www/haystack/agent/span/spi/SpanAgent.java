@@ -17,30 +17,25 @@
 
 package com.expedia.www.haystack.agent.span.spi;
 
-import com.expedia.www.haystack.agent.core.Agent;
-import com.expedia.www.haystack.agent.core.Dispatcher;
-import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
+import com.expedia.www.haystack.agent.core.BaseAgent;
 import com.expedia.www.haystack.agent.span.enricher.Enricher;
 import com.expedia.www.haystack.agent.span.service.SpanAgentGrpcService;
-import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
-import org.apache.commons.lang3.Validate;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
-public class SpanAgent implements Agent {
-    private static Logger LOGGER = LoggerFactory.getLogger(SpanAgent.class);
-
-    private List<Dispatcher> dispatchers;
+public class SpanAgent extends BaseAgent {
     private Server server;
     private static final long KEEP_ALIVE_TIME_IN_SECONDS = 30;
+
+    public SpanAgent() {
+        super(LoggerFactory.getLogger(SpanAgent.class));
+    }
 
     @Override
     public String getName() {
@@ -49,12 +44,12 @@ public class SpanAgent implements Agent {
 
     @Override
     public void initialize(final Config config) throws IOException {
-        dispatchers = loadAndInitializeDispatchers(config, Thread.currentThread().getContextClassLoader());
+        this.dispatchers = loadAndInitializeDispatchers(config, Thread.currentThread().getContextClassLoader(), getName());
 
         final int port = config.getInt("port");
         final List<Enricher> enrichers = loadSpanEnrichers(config);
 
-        server = NettyServerBuilder
+        this.server = NettyServerBuilder
                 .forPort(port)
                 .directExecutor()
                 .permitKeepAliveWithoutCalls(true)
@@ -63,68 +58,17 @@ public class SpanAgent implements Agent {
                 .build()
                 .start();
 
-        LOGGER.info("span agent grpc server started on port {}....", port);
+        logger.info("span agent grpc server started on port {}....", port);
 
         try {
             server.awaitTermination();
         } catch (InterruptedException ex) {
-            LOGGER.error("span agent server has been interrupted with exception", ex);
-        }
-    }
-
-    @VisibleForTesting
-    List<Enricher> loadSpanEnrichers(final Config config) {
-        if (config.hasPath("enrichers")) {
-            return config.getStringList("enrichers")
-                    .stream()
-                    .map(clazz -> {
-                        try {
-                            final Class c = Class.forName(clazz);
-                            LOGGER.info("Initializing the span enricher with class name '{}'", clazz);
-                            return (Enricher) c.newInstance();
-                        } catch (Exception e) {
-                            LOGGER.error("Fail to initialize the enricher with clazz name {}", clazz, e);
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-        } else {
-            return Collections.emptyList();
+            logger.error("span agent server has been interrupted with exception", ex);
         }
     }
 
     @Override
-    public void close() {
-        try {
-            for (final Dispatcher dispatcher : dispatchers) {
-                dispatcher.close();
-            }
-            LOGGER.info("shutting down gRPC server and jmx reporter");
-            server.shutdown();
-        } catch (Exception ignored) {
-        }
-    }
-
-    @VisibleForTesting
-    List<Dispatcher> loadAndInitializeDispatchers(final Config config, ClassLoader cl) {
-        final List<Dispatcher> dispatchers = new ArrayList<>();
-        final ServiceLoader<Dispatcher> loadedDispatchers = ServiceLoader.load(Dispatcher.class, cl);
-
-        for (final Dispatcher dispatcher : loadedDispatchers) {
-            final Map<String, Config> dispatches = ConfigurationHelpers.readDispatchersConfig(config, getName());
-            dispatches
-                    .entrySet()
-                    .stream()
-                    .filter((e) -> e.getKey().equalsIgnoreCase(dispatcher.getName()))
-                    .forEach((conf) -> {
-                        dispatcher.initialize(conf.getValue());
-                        dispatchers.add(dispatcher);
-                    });
-        }
-
-        Validate.notEmpty(dispatchers, "Span agent dispatchers can't be an empty set");
-
-        return dispatchers;
+    protected void closeInternal() throws Exception {
+        this.server.awaitTermination();
     }
 }
