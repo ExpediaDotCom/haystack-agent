@@ -58,7 +58,7 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
 
         final Timer.Context timer = dispatchTimer.time();
 
-        final Span enrichedSpan = enrichSpan(span);
+        final Span enrichedSpan = Enricher.enrichSpan(span, enrichers);
 
         for(final Dispatcher d : dispatchers) {
             try {
@@ -85,17 +85,5 @@ public class SpanAgentGrpcService extends SpanAgentGrpc.SpanAgentImplBase {
         timer.close();
         responseObserver.onNext(result.build());
         responseObserver.onCompleted();
-    }
-
-    private Span enrichSpan(final Span span) {
-        if(enrichers.isEmpty()) {
-            return span;
-        } else {
-            final Span.Builder transformedSpanBuilder = span.toBuilder();
-            for (final Enricher enricher : enrichers) {
-                enricher.apply(transformedSpanBuilder);
-            }
-            return transformedSpanBuilder.build();
-        }
     }
 }

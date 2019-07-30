@@ -92,6 +92,51 @@ This agent listens as a GRPC server on a configurable port and accepts the proto
 agent is already implemented in the open source repo and it supports kinesis, Kafka and HTTP dispatchers. Please note 
 that we bundle only this span proto agent and the AWS Kinesis dispatcher in our fat jar. 
 
+
+### Zipkin Agent (Pitchfork)
+This agent is influenced by pitchfork implementation [here](https://github.com/HotelsDotCom/pitchfork). The difference is that this can be run as a sidecar or daemon.
+It provides an http endpoint for publishing the zipkinV2 spans. It transforms zipkin formatted spans into haystack domain(protobuf) spans
+and dispatches to the configured sink. See below for list of supported dispatchers.
+Agent's http server supports following  endpoints for publishing zipkin spans:
+
+```
+a: /api/v1/spans - accepts v1 spans(json, thrift)
+b. /api/v2/spans - accepts v2 spans(json, proto)
+```
+
+You can configure pitchfork agent as shown below:
+
+```
+agents {
+  pitchfork {
+    enabled = true
+    port = 9411
+    http.threads {
+       max = 16
+       min = 2
+    }
+    idle.timeout.ms = 60000
+    stop.timeout.ms = 30000
+    accept.null.timestamps = false
+    max.timestamp.drift.sec = -1
+    
+    dispatchers {
+      kinesis {
+        Region = us-west-2
+        StreamName = spans
+        OutstandingRecordsLimit = 10000
+        MetricsLevel = none
+      }
+      
+      kafka {
+        bootstrap.servers = kafka-svc:9092
+        producer.topic = spans
+      }
+    }
+  }
+}
+```
+
 ## Dispatchers
 
 ### Kinesis Dispatcher

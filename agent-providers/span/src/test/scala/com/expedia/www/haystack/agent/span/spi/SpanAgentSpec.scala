@@ -25,8 +25,8 @@ import java.util
 import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.agent.span.enricher.Enricher
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{FunSpec, Matchers}
 import org.scalatest.easymock.EasyMockSugar
+import org.scalatest.{FunSpec, Matchers}
 
 import scala.collection.JavaConversions._
 
@@ -58,7 +58,7 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
         """.stripMargin)
 
       val cl = new ReplacingClassLoader(getClass.getClassLoader, dispatcherLoadFile, "dispatcherProvider.txt")
-      val dispatchers = agent.loadAndInitializeDispatchers(cfg, cl)
+      val dispatchers = agent.loadAndInitializeDispatchers(cfg, cl, "spans")
       dispatchers.size() shouldBe 1
       dispatchers.head.close()
     }
@@ -78,7 +78,7 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
         """.stripMargin)
 
       val caught = intercept[Exception] {
-        agent.loadAndInitializeDispatchers(cfg, getClass.getClassLoader)
+        agent.loadAndInitializeDispatchers(cfg, getClass.getClassLoader, "spans")
       }
 
       caught.getMessage shouldEqual "Span agent dispatchers can't be an empty set"
