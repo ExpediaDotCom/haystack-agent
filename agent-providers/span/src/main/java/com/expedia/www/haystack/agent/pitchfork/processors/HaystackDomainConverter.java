@@ -23,11 +23,9 @@ import com.expedia.open.tracing.Tag;
 import org.apache.commons.lang3.StringUtils;
 import zipkin2.Endpoint;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static java.util.Optional.empty;
 
@@ -35,13 +33,13 @@ import static java.util.Optional.empty;
  * Converter between {@code Zipkin} and {@code Haystack} domains.
  */
 @SuppressWarnings("PMD.UnusedPrivateMethod")
-public class HaystackDomainConverter {
+class HaystackDomainConverter {
 
     private HaystackDomainConverter() { }
     /**
      * Accepts a span in {@code Zipkin V2} format and returns a span in {@code Haystack} format.
      */
-    public static Span fromZipkinV2(final zipkin2.Span zipkin) {
+    static Span fromZipkinV2(final zipkin2.Span zipkin) {
         Span.Builder builder = Span.newBuilder()
                 .setTraceId(zipkin.traceId())
                 .setSpanId(zipkin.id());
@@ -51,7 +49,8 @@ public class HaystackDomainConverter {
         doIfNotNull(zipkin.duration(), builder::setDuration);
         doIfNotNull(zipkin.parentId(), builder::setParentSpanId);
         doIfNotNull(zipkin.localServiceName(), builder::setServiceName);
-        addRemoteEndpointAsTags(zipkin.remoteEndpoint(), builder);
+
+        builder.addAllTags(addRemoteEndpointAsTags(zipkin.remoteEndpoint()));
 
         getTagForKind(zipkin.kind()).ifPresent(builder::addTags);
 
@@ -64,33 +63,37 @@ public class HaystackDomainConverter {
         return builder.build();
     }
 
-    private static void addRemoteEndpointAsTags(Endpoint remote, Span.Builder builder) {
+    private static List<Tag> addRemoteEndpointAsTags(Endpoint remote) {
+        final List<Tag> remoteTags = new ArrayList<>();
         if (remote != null) {
-            if (StringUtils.isNotEmpty(remote.serviceName())) {
-                builder.addTags(Tag.newBuilder()
-                        .setKey("remote.service.name")
-                        .setVStr(remote.serviceName())
-                        .setType(Tag.TagType.STRING));
-            }
-            if (remote.port() != null) {
-                builder.addTags(Tag.newBuilder()
-                        .setKey("remote.service.port")
-                        .setVLong(remote.portAsInt())
-                        .setType(Tag.TagType.LONG));
-            }
-            if (StringUtils.isNotEmpty(remote.ipv4())) {
-                builder.addTags(Tag.newBuilder()
-                        .setKey("remote.service.ipv4")
-                        .setVStr(remote.ipv4())
-                        .setType(Tag.TagType.STRING));
-            }
-            if (StringUtils.isNotEmpty(remote.ipv6())) {
-                builder.addTags(Tag.newBuilder()
-                        .setKey("remote.service.ipv6")
-                        .setVStr(remote.ipv6())
-                        .setType(Tag.TagType.STRING));
-            }
+            buildStringTag("remote.service.name", remote::serviceName).ifPresent(remoteTags::add);
+            buildStringTag("remote.service.ipv4", remote::ipv4).ifPresent(remoteTags::add);
+            buildStringTag("remote.service.ipv6", remote::ipv6).ifPresent(remoteTags::add);
+            buildIntTag("remote.service.port", remote::port).ifPresent(remoteTags::add);
         }
+        return remoteTags;
+    }
+
+    private static Optional<Tag> buildIntTag(final String tagKey, final Supplier<Number> tagValueSupplier) {
+        final Number tagValue = tagValueSupplier.get();
+        if (tagValue != null) {
+            return Optional.of(Tag.newBuilder()
+                    .setKey(tagKey)
+                    .setVLong((Integer)tagValue)
+                    .setType(Tag.TagType.LONG).build());
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<Tag> buildStringTag(final String tagKey, final Supplier<String> tagValueSupplier) {
+        final String tagValue = tagValueSupplier.get();
+        if (StringUtils.isNotEmpty(tagValue)) {
+            return Optional.of(Tag.newBuilder()
+                    .setKey(tagKey)
+                    .setVStr(tagValue)
+                    .setType(Tag.TagType.STRING).build());
+        }
+        return Optional.empty();
     }
 
     private static <T> void doIfNotNull(T nullable, Consumer<T> runnable) {

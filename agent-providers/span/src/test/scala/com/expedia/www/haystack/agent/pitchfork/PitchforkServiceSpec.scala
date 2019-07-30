@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017 Expedia, Inc.
+ *  Copyright 2019 Expedia, Inc.
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ class PitchforkServiceSpec extends FunSpec with Matchers with EasyMockSugar {
   describe("Pitchfork Agent Http service") {
     it("should dispatch the zipkinv2 span successfully") {
       val mockDispatcher = mock[Dispatcher]
-      val config = ConfigFactory.parseMap(Map("port" -> 9111, "http.threads.min" -> 2, "http.threads.max" -> 4).asJava)
+      val config = ConfigFactory.parseMap(Map("port" -> 9115, "http.threads.min" -> 2, "http.threads.max" -> 4).asJava)
 
       val keyCapture = EasyMock.newCapture[Array[Byte]]()
       val haystackSpanCapture = EasyMock.newCapture[Array[Byte]]()
@@ -77,7 +77,7 @@ class PitchforkServiceSpec extends FunSpec with Matchers with EasyMockSugar {
         val body = RequestBody.create(
           MediaType.parse("application/json"), SpanBytesEncoder.JSON_V2.encode(zipkinSpan("0000000000000064")))
         val request = new Request.Builder()
-          .url("http://localhost:9111" + "/api/v2/spans")
+          .url("http://localhost:9115" + "/api/v2/spans")
           .post(body)
           .build()
 
@@ -93,10 +93,12 @@ class PitchforkServiceSpec extends FunSpec with Matchers with EasyMockSugar {
 //        haystackSpan.getServiceName shouldEqual "foo"
 //        haystackSpan.getDuration shouldBe 100000l
 //        haystackSpan.getStartTime should be >((System.currentTimeMillis() - 20000) * 1000)
-//        haystackSpan.getTagsCount shouldBe 3
+//        haystackSpan.getTagsCount shouldBe 6
 //        haystackSpan.getTagsList.asScala.find(t => t.getKey == "pos").get.getVStr shouldEqual "1"
 //        haystackSpan.getTagsList.asScala.find(t => t.getKey == "error").get.getVBool shouldBe true
-//        service.stop()
+//        haystackSpan.getTagsList.asScala.find(t => t.getKey == "remote.service.name").get.getVStr shouldBe "bar"
+//        haystackSpan.getTagsList.asScala.find(t => t.getKey == "remote.service.port").get.getVLong shouldBe 8080
+        service.stop()
       }
     }
 
