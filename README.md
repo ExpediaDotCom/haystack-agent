@@ -4,19 +4,25 @@
 # haystack-agent
 This repo contains haystack-agent, which can be run as a side-car container or a standalone agent on the host on which
 your micro service is running. One needs to add the haystack 
-[client library](https://github.com/ExpediaDotCom/haystack-client-java) in the application to push the spans to the
-agent.
+[client library](https://github.com/ExpediaDotCom/haystack-client-java) in the application to push the spans to the agent and [haystack-blobs](https://github.com/ExpediaDotCom/blobs/tree/master/haystack-blobs) library to push blobs to the agent.
 
 The span listener of haystack-agent runs as a GRPC server that accepts 
 [spans](https://github.com/ExpediaDotCom/haystack-idl/blob/master/proto/span.proto). It collects the spans and 
-dispatches them to one or more sinks, depending upon the configuration. Typical sinks are Kafka and AWS Kinesis;
-dispatchers for these two sinks are provided "out of the box" in this repository. We strongly encourage the open source 
+dispatches them to one or more sinks, depending upon the configuration. The supported sinks are Kafka and AWS Kinesis and HTTP;
+dispatchers for these three sinks are provided "out of the box" in this repository. 
+
+The blob listener of haystack-agent runs as a GRPC server that accepts 
+[blobs](https://github.com/ExpediaDotCom/haystack-idl/blob/master/proto/blobs/blob.proto). It collects the blobs and 
+dispatches them to one or more sinks, depending upon the configuration. The typical sink is AWS S3;
+dispatchers for this sink is provided "out of the box" in this repository. 
+
+We strongly encourage the open source 
 community to contribute additional dispatchers to this repo, but developers are free to write custom dispatchers
 in a private repository.
 
 # Architecture
 The haystack-agent uses the [SPI](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html) design architecture.
-The fat jar that gets built from this code contains single agent providers with three dispatchers (kinesis, Kafka and HTTP),
+The fat jar that gets built from this code contains single agent providers with three dispatchers (kinesis, Kafka and HTTP) for spans and one dispatcher for blobs(AWS S3),
 as mentioned above and discussed in more detail below.  
 The agents are loaded depending upon the configuration that can be provided via a http endpoint or a local file like
 
@@ -31,9 +37,15 @@ controlled through configuration.
 ### Haystack Agent Configuration
 The configuration readers are also implemented using the SPI design model. For now, we are only using file config 
 provider that is implemented [here](https://github.com/ExpediaDotCom/haystack-agent/tree/master/config-providers/file).
-Below is an example configuration that loads a single agent provider that reads protobuf spans over GRPC.
-This span agent spins up a GRPC server listening on port 34000 and publishes, via the configured dispatchers. The
-sample configuration below configures both a Kinesis and a Kafka dispatcher. The app or microservice needs to use a GRPC 
+Below is an example configuration that loads a single agent provider that reads protobuf spans and blobs over GRPC.
+
+The span agent spins up a GRPC server listening on port 34000 and publishes, via the configured dispatchers. The
+sample configuration below configures all the three Kinesis, Kafka and HTTP dispatchers.
+
+The blob agent spins up a GRPC server listening on port 34001 and publishes, via the configured dispatchers. The
+sample configuration below configures AWS S3 dispatcher.
+
+The app or microservice needs to use a GRPC 
 client to send messages to this haystack-agent.
 
 ```
@@ -63,6 +75,24 @@ agents {
       }
     }
   }
+  blobs {
+    enabled = true
+    port = 34001
+    max.blob.size.in.kb = 512
+    dispatchers {
+      s3 {
+        keep.alive = true
+        max.outstanding.requests = 150
+        should.wait.for.upload = true
+        max.connections = 50
+        retry.count = 1
+        bucket.name = "haystack-blobs"
+        region = "us-east-1"
+        aws.access.key = "accessKey"
+        aws.secret.key = "secretKey"
+      }
+    }
+  }
 }
 ```
 
@@ -79,18 +109,33 @@ and run it as a docker container with
 docker run -e HAYSTACK_PROP_AGENTS_SPANS_DISPATCHERS_KAFKA_BOOTSTRAP_SERVERS=localhost:9092 haystack-agent:latest
 ```
 
-We bundle default [configuration](./docker/default.conf) with haystack-agent's docker image. However, you can override or add any property using environment variables by adding a prefix 'HAYSTACK_PROP_'. For e.g. if you want to change the kafka producer topic then use 
+We bundle default [configuration](./docker/default.conf) with haystack-agent's docker image. However, you can override or add any property using environment variables by adding a prefix 'HAYSTACK_PROP_'. For e.g. 
+
+if you want to change the span's kafka producer topic then use 
 ```
 HAYSTACK_PROP_AGENTS_SPANS_DISPATCHERS_KAFKA_PRODUCER_TOPIC=sometopic
 ```
 
+or 
+
+if you want to change blob's S3 region then use
+```
+HAYSTACK_PROP_AGENTS_BLOBS_DISPATCHERS_S3_REGION=someregion
+```
+
 ## Agent Providers
-We have one agent provider today that is loaded depending upon the configuration as above.
+We have two agent providers today that are loaded depending upon the configuration as above.
 
 ### Span Proto Agent
 This agent listens as a GRPC server on a configurable port and accepts the protobuf span from the clients. The span 
-agent is already implemented in the open source repo and it supports kinesis, Kafka and HTTP dispatchers. Please note 
+agent is already implemented in the open source repo and it supports all three dispatchers i.e. kinesis, Kafka and HTTP. Please note 
 that we bundle only this span proto agent and the AWS Kinesis dispatcher in our fat jar. 
+
+### Blob Proto Agent
+
+This agent listens as a GRPC server on a configurable port and accepts the protobuf blob from the clients. The blob 
+agent is already implemented in the open source [blobs](https://github.com/ExpediaDotCom/blobs) repo and it supports S3 dispatcher.
+
 
 ## Dispatchers
 
@@ -133,9 +178,27 @@ The HTTP dispatcher uses an http client to post spans to a remote collector.
 ```
 a. url - url for the http span collector (eg: http://collector-svc:8080/spans)
 b. client.timeout.millis - timeout in milliseconds for reporting spans to the collector. Defaults to 500 ms.
-c. client.connectionpool.idle.max - number of idle connections to keep in the connection pool. Defaults to 5
-d. client.connectionpool.keepalive.minutes - keep alive duration in minutes for connections in the connection pool. Defaults to 5.
+b. client.connectionpool.idle.max - number of idle connections to keep in the connection pool. Defaults to 5
+b. client.connectionpool.keepalive.minutes - keep alive duration in minutes for connections in the connection pool. Defaults to 5.
 
+```
+
+### S3 Dispatcher
+
+This dispatcher is specifically for dispatching blobs to AWS S3 Server. It also has the ability to read the blobs from the same bucket. You need a GRPC client to read the blobs from port 34001.
+
+```
+region - aws region for e.g. us-west-2
+bucket.name - aws s3 bucket name
+aws.access.key and aws.secret.key - Optional, use them if want to use static AWS credentials.
+max.outstanding.requests - maximum parallel uploads to s3, else RateLimitException is thrown and sent to the client
+keep.alive - Optional, TCP keep alive for aws client. Default: false
+should.wait.for.upload - Optional, define is it should wait for complete upload of blob to S3. Default: false
+max.connections - Optional,maximum connections for aws client
+retry.count - Optional, maximum error retry for upload
+service.endpoint - Optional, custom endpoint for s3
+path.style.access.enabled - Optional, can be either true or false
+disable.chunked.encoding - Optional, can be either true or false
 ```
 
 ## How to build code?
