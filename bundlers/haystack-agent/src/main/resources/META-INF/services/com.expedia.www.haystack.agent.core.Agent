@@ -1,2 +1,3 @@
 com.expedia.www.haystack.agent.span.spi.SpanAgent
+com.expedia.www.haystack.agent.pitchfork.spi.PitchforkAgent
 com.expedia.www.haystack.agent.blobs.server.spi.BlobAgent
