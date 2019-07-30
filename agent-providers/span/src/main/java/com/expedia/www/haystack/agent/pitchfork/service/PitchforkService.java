@@ -15,10 +15,10 @@
  *
  */
 
-package com.expedia.www.haystack.agent.zipkin.service;
+package com.expedia.www.haystack.agent.pitchfork.service;
 
-import com.expedia.www.haystack.agent.zipkin.processors.ZipkinSpanProcessorFactory;
-import com.expedia.www.haystack.agent.zipkin.service.config.HttpConfig;
+import com.expedia.www.haystack.agent.pitchfork.processors.ZipkinSpanProcessorFactory;
+import com.expedia.www.haystack.agent.pitchfork.service.config.HttpConfig;
 import com.google.common.collect.ImmutableMap;
 import com.typesafe.config.Config;
 import org.eclipse.jetty.server.HttpConfiguration;

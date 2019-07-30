@@ -15,11 +15,11 @@
  *
  */
 
-package com.expedia.www.haystack.agent.zipkin.service;
+package com.expedia.www.haystack.agent.pitchfork.service;
 
 import com.codahale.metrics.Meter;
 import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
-import com.expedia.www.haystack.agent.zipkin.processors.ZipkinSpanProcessor;
+import com.expedia.www.haystack.agent.pitchfork.processors.ZipkinSpanProcessor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import static com.expedia.www.haystack.agent.zipkin.processors.ZipkinSpanProcessorFactory.*;
+import static com.expedia.www.haystack.agent.pitchfork.processors.ZipkinSpanProcessorFactory.*;
 
 public class PitchforkServlet extends HttpServlet {
     private final static Logger logger = LoggerFactory.getLogger(PitchforkServlet.class);
@@ -57,11 +57,12 @@ public class PitchforkServlet extends HttpServlet {
         requestRateMeter.mark();
         logger.info("zipkin span dispatch request at {}", request.getRequestURI());
 
-        final ZipkinSpanProcessor processor = processors.get(request.getContentType().toLowerCase());
+        final ZipkinSpanProcessor processor = getProcessor(request.getContentType());
         if (processor != null) {
             try {
-                processor.process(readFromStream(request.getInputStream()).toByteArray());
-                response.setStatus(201);
+                final byte[] inputBytes = readFromStream(request.getInputStream()).toByteArray();
+                processor.process(inputBytes);
+                response.setStatus(200);
             } catch (Exception ex) {
                 errorMeter.mark();
                 logger.error("Fail to process/forward the zipkin span, request made at {}", request.getRequestURI(), ex);
@@ -71,6 +72,17 @@ public class PitchforkServlet extends HttpServlet {
             response.sendError(400, String.format("invalid content-type, supported values are %s, %s, %s",
                     JSON_CONTENT_TYPE, THRIFT_CONTENT_TYPE, PROTO_CONTENT_TYPE));
         }
+    }
+
+    private ZipkinSpanProcessor getProcessor(String contentType) {
+        final String[] contentTypes = contentType.split(";");
+        for (final String ctype : contentTypes) {
+            final ZipkinSpanProcessor processor = processors.get(ctype.toLowerCase());
+            if (processor != null) {
+                return processor;
+            }
+        }
+        return null;
     }
 
     private ByteArrayOutputStream readFromStream(final InputStream input) throws IOException {

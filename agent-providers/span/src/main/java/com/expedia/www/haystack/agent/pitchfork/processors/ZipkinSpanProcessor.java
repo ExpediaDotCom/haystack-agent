@@ -15,18 +15,22 @@
  *
  */
 
-package com.expedia.www.haystack.agent.zipkin.processors;
+package com.expedia.www.haystack.agent.pitchfork.processors;
 
 import com.codahale.metrics.Meter;
 import com.expedia.open.tracing.Span;
 import com.expedia.www.haystack.agent.core.Dispatcher;
 import com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry;
 import com.expedia.www.haystack.agent.span.enricher.Enricher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zipkin2.codec.SpanBytesDecoder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ZipkinSpanProcessor {
+    private final static Logger logger = LoggerFactory.getLogger(ZipkinSpanProcessor.class);
     private final Meter invalidSpanMeter;
     private final SpanBytesDecoder decoder;
     private final SpanValidator validator;
@@ -44,19 +48,31 @@ public class ZipkinSpanProcessor {
         this.invalidSpanMeter = SharedMetricRegistry.newMeter("pitchfork.invalid.spans");
     }
 
-    public void process(byte[] data) throws Exception {
-        final List<zipkin2.Span> zipkinSpans = decoder.decodeList(data);
+    public void process(byte[] inputBytes) throws Exception {
+        final List<zipkin2.Span> zipkinSpans = decode(inputBytes);
         for (final zipkin2.Span span : zipkinSpans) {
             if (!validator.isSpanValid(span)) {
+                logger.warn("invalid zipkin span found !");
                 invalidSpanMeter.mark();
                 continue;
             }
 
             final Span haystackSpan = enrich(HaystackDomainConverter.fromZipkinV2(span));
             for (final Dispatcher dispatcher : dispatchers) {
+                logger.debug("dispatching span to dispatcher {}", dispatcher.getName());
                 dispatcher.dispatch(haystackSpan.getTraceId().getBytes(), haystackSpan.toByteArray());
             }
         }
+    }
+
+    private List<zipkin2.Span> decode(byte[] inputBytes) {
+        final List<zipkin2.Span> decodedSpans = new ArrayList<>();
+        try {
+            decoder.decodeList(inputBytes, decodedSpans);
+        } catch (Exception ex) {
+            decoder.decode(inputBytes, decodedSpans);
+        }
+        return decodedSpans;
     }
 
     private Span enrich(final Span span) {

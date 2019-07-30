@@ -15,13 +15,13 @@
  *
  */
 
-package com.expedia.www.haystack.agent.zipkin.spi;
+package com.expedia.www.haystack.agent.pitchfork.spi;
 
 import com.expedia.www.haystack.agent.core.BaseAgent;
 import com.expedia.www.haystack.agent.span.enricher.Enricher;
-import com.expedia.www.haystack.agent.zipkin.processors.SpanValidator;
-import com.expedia.www.haystack.agent.zipkin.processors.ZipkinSpanProcessorFactory;
-import com.expedia.www.haystack.agent.zipkin.service.PitchforkService;
+import com.expedia.www.haystack.agent.pitchfork.processors.SpanValidator;
+import com.expedia.www.haystack.agent.pitchfork.processors.ZipkinSpanProcessorFactory;
+import com.expedia.www.haystack.agent.pitchfork.service.PitchforkService;
 import com.typesafe.config.Config;
 import org.slf4j.LoggerFactory;
 

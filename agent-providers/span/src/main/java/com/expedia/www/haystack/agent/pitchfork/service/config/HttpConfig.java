@@ -15,7 +15,7 @@
  *
  */
 
-package com.expedia.www.haystack.agent.zipkin.service.config;
+package com.expedia.www.haystack.agent.pitchfork.service.config;
 
 import com.typesafe.config.Config;
 import org.apache.commons.lang3.Validate;

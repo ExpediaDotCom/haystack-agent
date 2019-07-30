@@ -104,7 +104,7 @@ a: /api/v1/spans - accepts v1 spans(json, thrift)
 b. /api/v2/spans - accepts v2 spans(json, proto)
 ```
 
-You can configure zipkin agent as shown below:
+You can configure pitchfork agent as shown below:
 
 ```
 agents {

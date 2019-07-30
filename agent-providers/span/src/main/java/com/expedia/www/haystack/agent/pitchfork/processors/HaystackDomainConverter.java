@@ -15,7 +15,7 @@
  *
  */
 
-package com.expedia.www.haystack.agent.zipkin.processors;
+package com.expedia.www.haystack.agent.pitchfork.processors;
 
 
 import com.expedia.open.tracing.Span;

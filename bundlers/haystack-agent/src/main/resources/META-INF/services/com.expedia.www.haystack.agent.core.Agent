@@ -1,2 +1,2 @@
 com.expedia.www.haystack.agent.span.spi.SpanAgent
-com.expedia.www.haystack.agent.zipkin.spi.PitchforkAgent
+com.expedia.www.haystack.agent.pitchfork.spi.PitchforkAgent
