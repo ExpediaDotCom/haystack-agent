@@ -16,11 +16,6 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.expedia.www</groupId>
-            <artifactId>blobs-core</artifactId>
-            <version>${blobs.version}</version>
-        </dependency>
 
         <!-- grpc -->
         <dependency>
