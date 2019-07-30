@@ -16,7 +16,7 @@ in a private repository.
 
 # Architecture
 The haystack-agent uses the [SPI](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html) design architecture.
-The fat jar that gets built from this code contains single agent providers with two dispatchers (kinesis and Kafka),
+The fat jar that gets built from this code contains single agent providers with three dispatchers (kinesis, Kafka and HTTP),
 as mentioned above and discussed in more detail below.  
 The agents are loaded depending upon the configuration that can be provided via a http endpoint or a local file like
 
@@ -89,7 +89,7 @@ We have one agent provider today that is loaded depending upon the configuration
 
 ### Span Proto Agent
 This agent listens as a GRPC server on a configurable port and accepts the protobuf span from the clients. The span 
-agent is already implemented in the open source repo and it supports both kinesis and Kafka dispatchers. Please note 
+agent is already implemented in the open source repo and it supports kinesis, Kafka and HTTP dispatchers. Please note 
 that we bundle only this span proto agent and the AWS Kinesis dispatcher in our fat jar. 
 
 ## Dispatchers
@@ -133,8 +133,8 @@ The HTTP dispatcher uses an http client to post spans to a remote collector.
 ```
 a. url - url for the http span collector (eg: http://collector-svc:8080/spans)
 b. client.timeout.millis - timeout in milliseconds for reporting spans to the collector. Defaults to 500 ms.
-b. client.connectionpool.idle.max - number of idle connections to keep in the connection pool. Defaults to 5
-b. client.connectionpool.keepalive.minutes - keep alive duration in minutes for connections in the connection pool. Defaults to 5.
+c. client.connectionpool.idle.max - number of idle connections to keep in the connection pool. Defaults to 5
+d. client.connectionpool.keepalive.minutes - keep alive duration in minutes for connections in the connection pool. Defaults to 5.
 
 ```
 
