@@ -20,6 +20,8 @@ package com.expedia.www.haystack.agent.pitchfork.processors;
 
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.Tag;
+import org.apache.commons.lang3.StringUtils;
+import zipkin2.Endpoint;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +51,9 @@ public class HaystackDomainConverter {
         doIfNotNull(zipkin.duration(), builder::setDuration);
         doIfNotNull(zipkin.parentId(), builder::setParentSpanId);
         doIfNotNull(zipkin.localServiceName(), builder::setServiceName);
+        addRemoteEndpointAsTags(zipkin.remoteEndpoint(), builder);
+
+        getTagForKind(zipkin.kind()).ifPresent(builder::addTags);
 
         if (zipkin.tags() != null && !zipkin.tags().isEmpty()) {
             zipkin.tags().forEach((key, value) -> {
@@ -56,10 +61,36 @@ public class HaystackDomainConverter {
                 builder.addAllTags(tagStream);
             });
         }
-
-        getTagForKind(zipkin.kind()).ifPresent(builder::addTags);
-
         return builder.build();
+    }
+
+    private static void addRemoteEndpointAsTags(Endpoint remote, Span.Builder builder) {
+        if (remote != null) {
+            if (StringUtils.isNotEmpty(remote.serviceName())) {
+                builder.addTags(Tag.newBuilder()
+                        .setKey("remote.service.name")
+                        .setVStr(remote.serviceName())
+                        .setType(Tag.TagType.STRING));
+            }
+            if (remote.port() != null) {
+                builder.addTags(Tag.newBuilder()
+                        .setKey("remote.service.port")
+                        .setVLong(remote.portAsInt())
+                        .setType(Tag.TagType.LONG));
+            }
+            if (StringUtils.isNotEmpty(remote.ipv4())) {
+                builder.addTags(Tag.newBuilder()
+                        .setKey("remote.service.ipv4")
+                        .setVStr(remote.ipv4())
+                        .setType(Tag.TagType.STRING));
+            }
+            if (StringUtils.isNotEmpty(remote.ipv6())) {
+                builder.addTags(Tag.newBuilder()
+                        .setKey("remote.service.ipv6")
+                        .setVStr(remote.ipv6())
+                        .setType(Tag.TagType.STRING));
+            }
+        }
     }
 
     private static <T> void doIfNotNull(T nullable, Consumer<T> runnable) {
