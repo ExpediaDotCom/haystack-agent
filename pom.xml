@@ -76,7 +76,7 @@
         <metrics-core.version>3.2.5</metrics-core.version>
         <jaxb.version>2.3.0</jaxb.version>
         <javax.activation.version>1.1.1</javax.activation.version>
-        <blobs.version>1.0.0-SNAPSHOT</blobs.version>
+        <blobs.version>1.0.0</blobs.version>
 
         <scala.major.version>2</scala.major.version>
         <scala.minor.version>12</scala.minor.version>

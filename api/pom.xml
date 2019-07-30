@@ -19,7 +19,7 @@
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>blobs-core</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${blobs.version}</version>
         </dependency>
 
         <!-- grpc -->
