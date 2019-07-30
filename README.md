@@ -75,8 +75,8 @@ agents {
       }
     }
   }
-  blobs {
-    enabled = true
+  ossblobs {
+    enabled = false
     port = 34001
     max.blob.size.in.kb = 512
     dispatchers {
