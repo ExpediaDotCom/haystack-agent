@@ -42,6 +42,16 @@
             <artifactId>haystack-agent-http-dispatcher</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.expedia.www</groupId>
+            <artifactId>blobs-agent-dispatchers</artifactId>
+            <version>${blobs.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.expedia.www</groupId>
+            <artifactId>blobs-agent-server</artifactId>
+            <version>${blobs.version}</version>
+        </dependency>
     </dependencies>
 
     <properties>
