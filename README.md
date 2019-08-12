@@ -39,10 +39,10 @@ The configuration readers are also implemented using the SPI design model. For n
 provider that is implemented [here](https://github.com/ExpediaDotCom/haystack-agent/tree/master/config-providers/file).
 Below is an example configuration that loads a single agent provider that reads protobuf spans and blobs over GRPC.
 
-The span agent spins up a GRPC server listening on port 34000 and publishes, via the configured dispatchers. The
+The span agent spins up a GRPC server listening on port 35000 and publishes, via the configured dispatchers. The
 sample configuration below configures all the three Kinesis, Kafka and HTTP dispatchers.
 
-The blob agent spins up a GRPC server listening on port 34001 and publishes, via the configured dispatchers. The
+The blob agent spins up a GRPC server listening on port 35001 and publishes, via the configured dispatchers. The
 sample configuration below configures AWS S3 dispatcher.
 
 The app or microservice needs to use a GRPC 
@@ -52,7 +52,7 @@ client to send messages to this haystack-agent.
 agents {
   spans {
     enabled = true
-    port = 34000
+    port = 35000
 
     dispatchers {
       kinesis {
@@ -77,7 +77,7 @@ agents {
   }
   ossblobs {
     enabled = false
-    port = 34001
+    port = 35001
     max.blob.size.in.kb = 512
     dispatchers {
       s3 {
@@ -230,7 +230,7 @@ b. client.connectionpool.keepalive.minutes - keep alive duration in minutes for 
 
 ### S3 Dispatcher
 
-This dispatcher is specifically for dispatching blobs to AWS S3 Server. It also has the ability to read the blobs from the same bucket. You need a GRPC client to read the blobs from port 34001.
+This dispatcher is specifically for dispatching blobs to AWS S3 Server. It also has the ability to read the blobs from the same bucket. You need a GRPC client to read the blobs from port 35001.
 
 ```
 region - aws region for e.g. us-west-2
