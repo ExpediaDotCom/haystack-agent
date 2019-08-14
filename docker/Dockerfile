@@ -20,5 +20,3 @@ RUN chmod +x ${APP_HOME}/start-app.sh
 WORKDIR ${APP_HOME}
 
 ENTRYPOINT ["./start-app.sh"]
-
-CMD ["--config-provider", "file", "--file-path", "/app/bin/default.conf"]

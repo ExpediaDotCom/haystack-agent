@@ -29,13 +29,20 @@ public class ConfigurationHelpers {
     public static String AGENT_NAME_KEY = "agentName";
 
     private final static String DEFAULT_HAYSTACK_AGENT_ENV_VAR_PREFIX = "HAYSTACK_PROP_";
-    private static String envVarPrefix = DEFAULT_HAYSTACK_AGENT_ENV_VAR_PREFIX; 
+    private final static Boolean SHOULD_LOWERCASE_NORMALIZE_KEY = true;
+
+    private static String envVarPrefix = DEFAULT_HAYSTACK_AGENT_ENV_VAR_PREFIX;
+    private static Boolean shouldLowercaseNormalizeKey = SHOULD_LOWERCASE_NORMALIZE_KEY;
 
     private ConfigurationHelpers() { /* suppress pmd violation */ }
 
     public static void setEnvVarPrefix(final String prefix) {
-       envVarPrefix = prefix; 
-    } 
+       envVarPrefix = prefix;
+    }
+
+    public static void setShouldLowercaseNormalizeKey(Boolean shouldLowercaseNormalizeKey) {
+       ConfigurationHelpers.shouldLowercaseNormalizeKey = shouldLowercaseNormalizeKey;
+    }
 
     /**
      * convert the map of [string,string] to properties object
@@ -116,12 +123,17 @@ public class ConfigurationHelpers {
         System.getenv().entrySet().stream()
                 .filter((e) -> isHaystackAgentEnvVar(e.getKey()))
                 .forEach((e) -> {
-                    final String normalizedKey = e.getKey().replaceFirst(envVarPrefix, "")
-                            .replace('_', '.').toLowerCase();
+                    final String normalizedKey = getNormalizedKey(e.getKey());
                     envMap.put(normalizedKey, e.getValue());
                 });
 
         return ConfigFactory.parseMap(envMap);
+    }
+
+    private static String getNormalizedKey(String key) {
+        String normalizedKey = key.replaceFirst(envVarPrefix, "")
+                .replace('_', '.');
+        return shouldLowercaseNormalizeKey ? normalizedKey.toLowerCase() : normalizedKey ;
     }
 
     // extracts the root keyname, for e.g. if the path given is 'x.y.z' then rootKey is 'x'
