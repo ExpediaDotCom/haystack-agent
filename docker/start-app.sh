@@ -12,4 +12,9 @@ JAVA_OPTS="${JAVA_OPTS} \
 -Dapplication.name=${APP_NAME} \
 -Dapplication.home=${APP_HOME}"
 
-exec java ${JAVA_OPTS} -jar "${APP_HOME}/${APP_NAME}.jar" "$@"
+
+if [ -z "${HAYSTACK_AGENT_CONFIG_FILE_PATH}" ]; then
+    exec java ${JAVA_OPTS} -jar "${APP_HOME}/${APP_NAME}.jar --config-provider file --file-path /app/bin/default.conf"
+else
+    exec java ${JAVA_OPTS} -jar "${APP_HOME}/${APP_NAME}.jar --config-provider file --file-path ${HAYSTACK_AGENT_CONFIG_FILE_PATH}"
+fi
