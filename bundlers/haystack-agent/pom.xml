@@ -52,6 +52,12 @@
             <artifactId>blobs-agent-server</artifactId>
             <version>${blobs.version}</version>
         </dependency>
+        <!-- grpc -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-services</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
     </dependencies>
 
     <properties>
