@@ -120,7 +120,7 @@ or
 
 if you want to change blob's S3 region then use
 ```
-HAYSTACK_PROP_AGENTS_BLOBS_DISPATCHERS_S3_REGION=someregion
+HAYSTACK_PROP_AGENTS_OSSBLOBS_DISPATCHERS_S3_REGION=someregion
 ```
 
 ## Agent Providers
