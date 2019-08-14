@@ -45,16 +45,14 @@ spec:
           value: "${jvm_memory_limit}m"
         - name: "JAVA_XMX"
           value: "${jvm_memory_limit}m"
-#        livenessProbe:
-#          exec:
-#            command:
-#            - grep
-#            - "true"
-#            - /app/isHealthy
-#          initialDelaySeconds: 30
-#          periodSeconds: 5
-#          timeoutSeconds: 5
-#          failureThreshold: 6
+        livenessProbe:
+          exec:
+            command:
+              - /bin/grpc_health_probe
+              - "-addr=:${blobs_service_port}"
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          failureThreshold: 3
       nodeSelector:
         ${node_selecter_label}
       volumes:
