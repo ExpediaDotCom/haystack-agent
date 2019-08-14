@@ -17,9 +17,9 @@ variable "aws_region" {
 }
 
 variable "spans_service_port" {
-  default = 34000
+  default = 35000
 }
 
 variable "blobs_service_port" {
-  default = 34001
+  default = 35001
 }
