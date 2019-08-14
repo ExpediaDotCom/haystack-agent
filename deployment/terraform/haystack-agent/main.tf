@@ -25,6 +25,8 @@ data "template_file" "config_data" {
     kafka_endpoint = "${var.kafka_hostname}:${var.kafka_port}"
     aws_bucket_name = "${var.haystack-agent["blobs_aws_bucket_name"]}"
     aws_region = "${var.haystack-agent["blobs_aws_region"]}"
+    blobs_service_port = "${var.blobs_service_port}"
+    spans_service_port = "${var.spans_service_port}"
   }
 }
 
