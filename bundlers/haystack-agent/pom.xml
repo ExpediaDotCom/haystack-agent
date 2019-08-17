@@ -4,7 +4,7 @@
     <parent>
         <artifactId>haystack-agent-core</artifactId>
         <groupId>com.expedia.www</groupId>
-        <version>0.1.11-SNAPSHOT</version>
+        <version>0.1.12-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
