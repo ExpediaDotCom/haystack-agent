@@ -18,6 +18,7 @@
 package com.expedia.www.haystack.agent.pitchfork.processors;
 
 
+import com.expedia.open.tracing.Log;
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.Tag;
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +59,14 @@ class HaystackDomainConverter {
             zipkin.tags().forEach((key, value) -> {
                 List<Tag> tagStream = fromZipkinTag(key, value);
                 builder.addAllTags(tagStream);
+            });
+        }
+
+        if (zipkin.annotations() != null && !zipkin.annotations().isEmpty()) {
+            zipkin.annotations().forEach(annotation -> {
+                final Tag tag = Tag.newBuilder().setKey("annotation").setVStr(annotation.value()).build();
+                final Log log = Log.newBuilder().setTimestamp(annotation.timestamp()).addFields(tag).build();
+                builder.addLogs(log);
             });
         }
         return builder.build();
