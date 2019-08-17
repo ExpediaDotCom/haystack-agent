@@ -27,6 +27,11 @@ data "template_file" "config_data" {
     aws_region = "${var.haystack-agent["blobs_aws_region"]}"
     blobs_service_port = "${var.blobs_service_port}"
     spans_service_port = "${var.spans_service_port}"
+    enable_spans = "${var.haystack-agent["enable_spans"]}"
+    enable_ossblobs = "${var.haystack-agent["enable_ossblobs"]}"
+    enable_pitchfork = "${var.haystack-agent["enable_pitchfork"]}"
+    use_sts_arn = "${var.haystack-agent["use_sts_arn"]}"
+    sts_arn_role = "${var.haystack-agent["sts_arn_role"]}"
   }
 }
 
