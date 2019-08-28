@@ -17,10 +17,11 @@
 
 package com.expedia.www.haystack.agent.pitchfork
 
+import java.io.ByteArrayOutputStream
 import java.util
 import java.util.Collections
+import java.util.zip.GZIPOutputStream
 
-import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.agent.core.Dispatcher
 import com.expedia.www.haystack.agent.pitchfork.processors.{SpanValidator, ZipkinSpanProcessorFactory}
 import com.expedia.www.haystack.agent.pitchfork.service.PitchforkService
@@ -54,8 +55,16 @@ class PitchforkServiceSpec extends FunSpec with Matchers with EasyMockSugar {
 
   describe("Pitchfork Agent Http service") {
     it("should dispatch the zipkinv2 span successfully") {
+      runZipkinV2SpanTest(false)
+    }
+
+    it("should dispatch compressed zipkinv2 span successfully") {
+      runZipkinV2SpanTest(true)
+    }
+
+    def runZipkinV2SpanTest(compress: Boolean) : Unit = {
       val mockDispatcher = mock[Dispatcher]
-      val config = ConfigFactory.parseMap(Map("port" -> 9115, "http.threads.min" -> 2, "http.threads.max" -> 4).asJava)
+      val config = ConfigFactory.parseMap(Map("port" -> 9115, "http.threads.min" -> 2, "http.threads.max" -> 4, "gzip.enabled" -> compress).asJava)
 
       val keyCapture = EasyMock.newCapture[Array[Byte]]()
       val haystackSpanCapture = EasyMock.newCapture[Array[Byte]]()
@@ -74,32 +83,37 @@ class PitchforkServiceSpec extends FunSpec with Matchers with EasyMockSugar {
         // let the server start
         Thread.sleep(5000)
 
-        val body = RequestBody.create(
-          MediaType.parse("application/json"), SpanBytesEncoder.JSON_V2.encode(zipkinSpan("0000000000000064")))
-        val request = new Request.Builder()
-          .url("http://localhost:9115" + "/api/v2/spans")
-          .post(body)
-          .build()
+        val request = newRequest(compress)
 
         val response = client.newCall(request).execute()
-//        response.code() shouldBe 200
-//
-//        new String(keyCapture.getValue) shouldEqual "0000000000000064"
-//        val haystackSpan = Span.parseFrom(haystackSpanCapture.getValue)
-//        haystackSpan.getTraceId shouldEqual "0000000000000064"
-//        haystackSpan.getSpanId shouldEqual "0000000000000001"
-//        haystackSpan.getParentSpanId shouldEqual "0000000000000002"
-//        haystackSpan.getOperationName shouldEqual "/foo"
-//        haystackSpan.getServiceName shouldEqual "foo"
-//        haystackSpan.getDuration shouldBe 100000l
-//        haystackSpan.getStartTime should be >((System.currentTimeMillis() - 20000) * 1000)
-//        haystackSpan.getTagsCount shouldBe 6
-//        haystackSpan.getTagsList.asScala.find(t => t.getKey == "pos").get.getVStr shouldEqual "1"
-//        haystackSpan.getTagsList.asScala.find(t => t.getKey == "error").get.getVBool shouldBe true
-//        haystackSpan.getTagsList.asScala.find(t => t.getKey == "remote.service.name").get.getVStr shouldBe "bar"
-//        haystackSpan.getTagsList.asScala.find(t => t.getKey == "remote.service.port").get.getVLong shouldBe 8080
+        response.code() shouldBe 200
         service.stop()
       }
+    }
+
+    def newRequest(compress: Boolean) : Request = {
+      val requestBuilder = new Request.Builder()
+        .url("http://localhost:9115" + "/api/v2/spans")
+
+      var data = SpanBytesEncoder.JSON_V2.encode(zipkinSpan("0000000000000064"))
+      if (compress) {
+        val bos = new ByteArrayOutputStream()
+        val gzip = new GZIPOutputStream(bos)
+        try {
+          gzip.write(data)
+          gzip.finish()
+        } finally {
+          gzip.close()
+          bos.close()
+        }
+        data = bos.toByteArray
+        requestBuilder.addHeader("Content-Encoding", "gzip")
+      }
+
+      val body = RequestBody.create(MediaType.parse("application/json"), data)
+      requestBuilder.post(body)
+
+      requestBuilder.build()
     }
 
     it("should dispatch the proto spans successfully") {
