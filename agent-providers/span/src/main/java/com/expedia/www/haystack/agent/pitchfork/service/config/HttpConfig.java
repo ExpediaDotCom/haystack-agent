@@ -90,7 +90,7 @@ public class HttpConfig {
         final int idleTimeout = config.hasPath(IDLE_TIMEOUT_MILLIS_CONFIG_KEY) ? config.getInt(IDLE_TIMEOUT_MILLIS_CONFIG_KEY) : 60000;
         final int stopTimeout = config.hasPath(STOP_TIMEOUT_MILLIS_CONFIG_KEY) ? config.getInt(STOP_TIMEOUT_MILLIS_CONFIG_KEY) : 30000;
         final int gzipBufferSize = config.hasPath(GZIP_BUFFER_SIZE) ? config.getInt(GZIP_BUFFER_SIZE) : 16384;
-        final boolean gzipEnabled = config.hasPath(GZIP_ENABLED_KEY) && config.getBoolean(GZIP_ENABLED_KEY);
+        final boolean gzipEnabled = !config.hasPath(GZIP_ENABLED_KEY) || config.getBoolean(GZIP_ENABLED_KEY); // default is true
         return new HttpConfig(port, minThreads, maxThreads, idleTimeout, stopTimeout, gzipEnabled, gzipBufferSize);
     }
 }
