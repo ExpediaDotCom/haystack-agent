@@ -25,6 +25,7 @@ import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -34,11 +35,10 @@ import org.slf4j.LoggerFactory;
 public class PitchforkService {
     private final static Logger logger = LoggerFactory.getLogger(PitchforkService.class);
     private final Server server;
-    private final int port;
+    private final HttpConfig cfg;
 
     public PitchforkService(final Config config, final ZipkinSpanProcessorFactory processorFactory) {
-        final HttpConfig cfg = HttpConfig.from(config);
-        this.port = cfg.getPort();
+        this.cfg = HttpConfig.from(config);
         final QueuedThreadPool threadPool = new QueuedThreadPool(cfg.getMaxThreads(), cfg.getMinThreads(), cfg.getIdleTimeout());
         server = new Server(threadPool);
 
@@ -49,6 +49,12 @@ public class PitchforkService {
 
         final ServletContextHandler context = new ServletContextHandler(server, "/");
         addResources(context, processorFactory);
+
+        if (cfg.isGzipEnabled()) {
+            final GzipHandler gzipHandler = new GzipHandler();
+            gzipHandler.setInflateBufferSize(cfg.getGzipBufferSize());
+            context.setGzipHandler(gzipHandler);
+        }
 
         server.setStopTimeout(cfg.getStopTimeout());
         logger.info("pitchfork has been initialized successfully !");
@@ -66,7 +72,7 @@ public class PitchforkService {
 
     public void start() throws Exception {
         server.start();
-        logger.info("pitchfork has been started on port {} ....", port);
+        logger.info("pitchfork has been started on port {} ....", cfg.getPort());
     }
 
     public void stop() throws Exception {
