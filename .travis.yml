@@ -4,7 +4,7 @@ services:
   - docker
 
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 install:
   - mvn --settings .travis/settings.xml install -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
