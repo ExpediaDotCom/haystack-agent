@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/ExpediaDotCom/haystack-agent.svg?branch=master)](https://travis-ci.org/ExpediaDotCom/haystack-agent)
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/ExpediaDotCom/haystack/blob/master/LICENSE)
+[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/r/com.expedia.www/haystack-agent.svg?server=https%3A%2F%2Foss.sonatype.org)](https://oss.sonatype.org/content/repositories/snapshots/com/expedia/www/haystack-agent/)
 
 # haystack-agent
 This repo contains haystack-agent, which can be run as a side-car container or a standalone agent on the host on which
@@ -139,7 +140,7 @@ and dispatches to the configured sink. See below for list of supported dispatche
 Agent's http server supports following  endpoints for publishing zipkin spans:
 
 ```
-a: /api/v1/spans - accepts v1 spans(json, thrift)
+a. /api/v1/spans - accepts v1 spans(json, thrift)
 b. /api/v2/spans - accepts v2 spans(json, proto)
 ```
 
@@ -193,8 +194,8 @@ configuration properties for it to work properly:
 3. OutstandingRecordsLimit - maximum pending records that are still not published to kinesis. If agent receives more 
 dispatch requests, then it sends back 'RATE_LIMIT_ERROR' in the GRPC response.
 4. AWS keys - Optional, use them if you want to connect using static AWS access and secret keys
-  * AwsAccessKey
-  * AwsSecretKey 
+   - AwsAccessKey
+   - AwsSecretKey 
 5. StsRoleArn - Optional, use it if you want to provide credentials by assuming a role
 
 You can also provide AWS_ACCESS_KEY and AWS_SECRET_KEY as java system property values, or environment variable, 
@@ -250,13 +251,16 @@ disable.chunked.encoding - Optional, can be either true or false
 
 #### Clone
 Since this repo contains haystack-idl as the submodule, so use the following to clone the repo
-* git clone --recursive git@github.com:ExpediaDotCom/haystack-agent.git .
+
+```
+git clone --recursive git@github.com:ExpediaDotCom/haystack-agent.git .
+```
 
 #### Prerequisites: 
 
-* Make sure you have Java 1.8
-* Make sure you have maven 3.3.9 or higher
-* Make sure you have docker 1.13 or higher
+- Make sure you have Java 1.8
+- Make sure you have maven 3.3.9 or higher
+- Make sure you have docker 1.13 or higher
 
 Note : For Mac users you can download docker for Mac to set you up for the last two steps.
 
