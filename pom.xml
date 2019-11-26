@@ -12,6 +12,7 @@
         <module>api</module>
         <module>config-providers/file</module>
         <module>agent-providers/span</module>
+        <module>agent-providers/span-offline</module>
         <module>agent-dispatchers/kafka</module>
         <module>agent-dispatchers/kinesis</module>
         <module>agent-dispatchers/http</module>
@@ -78,6 +79,7 @@
         <jaxb.version>2.3.0</jaxb.version>
         <javax.activation.version>1.1.1</javax.activation.version>
         <blobs.version>1.0.3</blobs.version>
+        <amazon.kinesis.agent.version>1.1.4</amazon.kinesis.agent.version>
 
         <jetty.version>9.4.18.v20190429</jetty.version>
         <zipkin2.version>2.15.0</zipkin2.version>
@@ -127,6 +129,12 @@
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java-util</artifactId>
                 <version>${protobuf.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>amazon-kinesis-agent</artifactId>
+                <version>${amazon.kinesis.agent.version}</version>
             </dependency>
 
             <!-- config, metrics -->
