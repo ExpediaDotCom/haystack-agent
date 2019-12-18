@@ -21,30 +21,6 @@ import com.typesafe.config.Config;
 
 public interface Dispatcher extends AutoCloseable {
     /**
-     * Dispatches the data into the console.
-     */
-    Dispatcher CONSOLE = new Dispatcher() {
-        @Override
-        public String getName() {
-            return "console";
-        }
-
-        @Override
-        @SuppressWarnings("PMD.SystemPrintln")
-        public void dispatch(final byte[] partitionKey, final byte[] data) {
-            System.out.println(new String(data));
-        }
-
-        @Override
-        public void initialize(final Config conf) {
-        }
-
-        @Override
-        public void close() {
-        }
-    };
-
-    /**
      * returns the unique name for this dispatcher
      */
     String getName();

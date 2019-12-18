@@ -15,21 +15,22 @@
  *
  */
 
-package com.expedia.www.haystack.agent.core
+package com.expedia.www.haystack.agent.core.dispatchers
+
+import java.io.{ByteArrayOutputStream, PrintStream}
 
 import com.expedia.open.tracing.Span
+import com.expedia.www.haystack.agent.core.dispatchers.ConsoleDispatcher
 import org.scalatest.{FunSpec, Matchers}
-import java.io.PrintStream
-import java.io.ByteArrayOutputStream
 
-class DispatcherSpec extends FunSpec with Matchers {
+class ConsoleDispatcherSpec extends FunSpec with Matchers {
   describe("Console Dispatcher") {
     it("should dispatch span to console collector with success") {
       val outContent: ByteArrayOutputStream = new ByteArrayOutputStream
       val sOut = System.out
       System.setOut(new PrintStream(outContent))
 
-      val dispatcher = Dispatcher.CONSOLE
+      val dispatcher = new ConsoleDispatcher()
 
       val span = Span.newBuilder().setTraceId("traceid").build()
       dispatcher.dispatch(span.getTraceId.getBytes("utf-8"), span.toByteArray)
