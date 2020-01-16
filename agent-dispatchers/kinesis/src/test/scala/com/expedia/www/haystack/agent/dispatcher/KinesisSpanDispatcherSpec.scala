@@ -161,11 +161,9 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar
       }
 
       whenExecuting(kinesisProducer, outstandRecErrorMeter) {
-        val caught = intercept[Exception] {
+        val caught = intercept[RateLimitException] {
           dispatcher.dispatch(span.getTraceId.getBytes("utf-8"), span.toByteArray)
         }
-
-        caught.getMessage shouldEqual "fail to dispatch to kinesis due to rate limit, outstanding records: 1001"
       }
     }
   }
