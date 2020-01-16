@@ -115,7 +115,7 @@ public class KinesisDispatcher implements Dispatcher {
 
     @Override
     public void close() {
-        LOGGER.info("Closing the kinesis span dispatcher now...");
+        LOGGER.info("Closing the kinesis dispatcher now...");
         if (producer != null) {
             producer.flushSync();
             producer.destroy();
