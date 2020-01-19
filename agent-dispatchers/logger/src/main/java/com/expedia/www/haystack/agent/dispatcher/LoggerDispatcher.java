@@ -15,31 +15,39 @@
  *
  */
 
-package com.expedia.www.haystack.agent.core.dispatchers;
+package com.expedia.www.haystack.agent.dispatcher;
 
+import com.expedia.open.tracing.Span;
 import com.expedia.www.haystack.agent.core.Dispatcher;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.typesafe.config.Config;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Dispatches the data into the console.
+ * Dispatches the data into stdout.
  */
-public class ConsoleDispatcher implements Dispatcher {
+public class LoggerDispatcher implements Dispatcher {
+    private final static Logger LOGGER = LoggerFactory.getLogger(LoggerDispatcher.class);
+
     @Override
     public String getName() {
-        return "console";
+        return "logger";
     }
 
     @Override
-    @SuppressWarnings("PMD.SystemPrintln")
     public void dispatch(final byte[] partitionKey, final byte[] data) {
-        System.out.println(new String(data));
+        try {
+            Span span = Span.parseFrom(data);
+            LOGGER.debug(span.toString());
+        } catch (InvalidProtocolBufferException ex) {
+            LOGGER.error("failed to parse span: " + ex);
+        }
     }
 
     @Override
-    public void initialize(final Config conf) {
-    }
+    public void initialize(final Config conf) {}
 
     @Override
-    public void close() {
-    }
+    public void close() {}
 }

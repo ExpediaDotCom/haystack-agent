@@ -15,6 +15,7 @@
         <module>agent-dispatchers/kafka</module>
         <module>agent-dispatchers/kinesis</module>
         <module>agent-dispatchers/http</module>
+        <module>agent-dispatchers/logger</module>
         <module>bundlers/haystack-agent</module>
     </modules>
 
