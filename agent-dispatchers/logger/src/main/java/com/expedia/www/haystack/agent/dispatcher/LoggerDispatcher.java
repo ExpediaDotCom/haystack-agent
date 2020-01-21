@@ -39,7 +39,7 @@ public class LoggerDispatcher implements Dispatcher {
     public void dispatch(final byte[] partitionKey, final byte[] data) {
         try {
             Span span = Span.parseFrom(data);
-            LOGGER.debug(span.toString());
+            LOGGER.debug("{}", span);
         } catch (InvalidProtocolBufferException ex) {
             LOGGER.error("failed to parse span: " + ex);
         }
