@@ -35,19 +35,13 @@ class LoggerDispatcherSpec extends FunSpec with Matchers {
         val span = Span.newBuilder()
           .setTraceId("7f46165474d11ee5836777d85df2cdab")
           .setSpanId("30d1aee5836717f0")
-          .addTags(Tag.newBuilder().setKey("http.path").setVStr("/my-path").build())
-          .addTags(Tag.newBuilder().setKey("sql.affected_row").setVLong(1).build())
+          .addTags(Tag.newBuilder().setKey("http.path").setType(Tag.TagType.STRING).setVStr("/my-path").build())
+          .addTags(Tag.newBuilder().setKey("sql.affected_row").setType(Tag.TagType.LONG).setVLong(1).build())
           .build()
 
         dispatcher.dispatch(span.getTraceId.getBytes("utf-8"), span.toByteArray)
         dispatcher.close()
-
-        outContent.toString().contains("traceId: \"7f46165474d11ee5836777d85df2cdab\"") shouldBe true
-        outContent.toString().contains("spanId: \"30d1aee5836717f0\"") shouldBe true
-        outContent.toString().contains("key: \"http.path\"") shouldBe true
-        outContent.toString().contains("vStr: \"/my-path\"") shouldBe true
-        outContent.toString().contains("key: \"sql.affected_row\"") shouldBe true
-        outContent.toString().contains("vLong: 1") shouldBe true
+        outContent.toString().contains("{\"traceId\":\"7f46165474d11ee5836777d85df2cdab\",\"spanId\":\"30d1aee5836717f0\",\"startTime\":0,\"tags\":[{\"key\":\"http.path\",\"type\":\"STRING\",\"vString\":\"/my-path\"}{\"key\":\"sql.affected_row\",\"type\":\"LONG\",\"vLong\":1}]}")
       } finally {
         /* Makes sure the result of the test will be reported to stdOut */
         System.setOut(sOut)
