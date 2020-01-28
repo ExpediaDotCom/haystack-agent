@@ -19,35 +19,20 @@ package com.expedia.www.haystack.agent.dispatcher;
 
 import com.expedia.open.tracing.Span;
 import com.expedia.www.haystack.agent.core.Dispatcher;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import com.google.protobuf.util.JsonFormat.Printer;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 /**
  * Dispatches the data into stdout.
  */
 public class LoggerDispatcher implements Dispatcher {
     private final static Logger LOGGER = LoggerFactory.getLogger(LoggerDispatcher.class);
-
-    private static class JSONSerializableSpan {
-        Span delegate;
-        static Printer printer = JsonFormat.printer().omittingInsignificantWhitespace();
-
-        public JSONSerializableSpan(Span span) {
-            delegate = span;
-        }
-
-        public String toString() {
-            try {
-                return printer.print(delegate);
-            } catch (InvalidProtocolBufferException e) {
-                return "";
-            }
-        }
-    }
+    private final static Printer PRINTER = JsonFormat.printer().omittingInsignificantWhitespace();
 
     @Override
     public String getName() {
@@ -58,8 +43,10 @@ public class LoggerDispatcher implements Dispatcher {
     public void dispatch(final byte[] partitionKey, final byte[] data) {
         try {
             Span span = Span.parseFrom(data);
-            LOGGER.debug("{}", new JSONSerializableSpan(span));
-        } catch (InvalidProtocolBufferException ex) {
+            StringBuilder builder = new StringBuilder();
+            PRINTER.appendTo(span, builder);
+            LOGGER.debug("{}", builder);
+        } catch (IOException ex ){
             LOGGER.error("failed to parse span: " + ex);
         }
     }
