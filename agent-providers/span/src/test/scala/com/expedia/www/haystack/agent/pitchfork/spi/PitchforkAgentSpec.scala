@@ -16,7 +16,7 @@
  */
 
 
-package com.expedia.www.haystack.agent.span.spi
+package com.expedia.www.haystack.agent.pitchfork.spi
 
 import java.io.IOException
 import java.net.URL
@@ -28,23 +28,21 @@ import com.typesafe.config.ConfigFactory
 import org.scalatest.easymock.EasyMockSugar
 import org.scalatest.{FunSpec, Matchers}
 
-import scala.collection.JavaConversions._
-
 class DummyEnricher extends Enricher {
   override def apply(span: Span.Builder): Unit = ()
 }
 
-class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
+class PitchforkAgentSpec extends FunSpec with Matchers with EasyMockSugar {
 
   private val dispatcherLoadFile = "META-INF/services/com.expedia.www.haystack.agent.core.Dispatcher"
 
-  describe("Span Agent") {
-    it("should return the 'spans' as agent name") {
-      new SpanAgent().getName shouldEqual "spans"
+  describe("Pitchfork Agent") {
+    it("should return the 'pitchfork' as agent name") {
+      new PitchforkAgent().getName shouldEqual "pitchfork"
     }
 
     it("should load the dispatchers from the config") {
-      val agent = new SpanAgent()
+      val agent = new PitchforkAgent()
       val cfg = ConfigFactory.parseString(
         """
           |    k1 = "v1"
@@ -60,11 +58,11 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
       val cl = new ReplacingClassLoader(getClass.getClassLoader, dispatcherLoadFile, "dispatcherProvider.txt")
       val dispatchers = agent.loadAndInitializeDispatchers(cfg, cl, "spans")
       dispatchers.size() shouldBe 1
-      dispatchers.head.close()
+      dispatchers.get(0).close()
     }
 
     it("initialization should fail if no dispatchers exist") {
-      val agent = new SpanAgent()
+      val agent = new PitchforkAgent()
       val cfg = ConfigFactory.parseString(
         """
           |    k1 = "v1"
@@ -81,11 +79,11 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
         agent.loadAndInitializeDispatchers(cfg, getClass.getClassLoader, "spans")
       }
 
-      caught.getMessage shouldEqual "Spans agent dispatchers can't be an empty set"
+      caught.getMessage shouldEqual "Pitchfork agent dispatchers can't be an empty set"
     }
 
     it ("should load enrichers") {
-      val agent = new SpanAgent()
+      val agent = new PitchforkAgent()
       val cfg = ConfigFactory.parseString(
         """
           |    k1 = "v1"
@@ -96,7 +94,7 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
           |    ]
         """.stripMargin)
       val enrichers = agent.loadSpanEnrichers(cfg)
-      enrichers.length shouldBe 1
+      enrichers.size() shouldBe 1
     }
   }
 
