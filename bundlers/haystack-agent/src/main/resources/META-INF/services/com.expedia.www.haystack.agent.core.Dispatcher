@@ -1,2 +1,3 @@
 com.expedia.www.haystack.agent.dispatcher.KafkaDispatcher
 com.expedia.www.haystack.agent.dispatcher.KinesisDispatcher
+com.expedia.www.haystack.agent.dispatcher.LoggerDispatcher

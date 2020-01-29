@@ -22,21 +22,21 @@ import com.typesafe.config.Config;
 public interface Dispatcher extends AutoCloseable {
     /**
      * returns the unique name for this dispatcher
-     * @return
      */
     String getName();
 
     /**
      * dispatch the record to the sink
+     * 
      * @param partitionKey partitionKey if present, else send null
-     * @param data data bytes that need to be dispatched to the sink
+     * @param data         in bytes that need to be dispatched to the sink
      * @throws Exception throws exception if fails to dispatch
      */
     void dispatch(final byte[] partitionKey, final byte[] data) throws Exception;
 
-
     /**
      * initializes the dispatcher for pushing span records to the sink
+     * 
      * @param conf
      */
     void initialize(final Config conf);
