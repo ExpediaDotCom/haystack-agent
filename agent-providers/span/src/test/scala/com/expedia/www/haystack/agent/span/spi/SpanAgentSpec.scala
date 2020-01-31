@@ -54,12 +54,14 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
           |      test-dispatcher {
           |        queueName = "myqueue"
           |      }
+          |      test-dispatcher-empty-config {
+          |      }
           |    }
         """.stripMargin)
 
       val cl = new ReplacingClassLoader(getClass.getClassLoader, dispatcherLoadFile, "dispatcherProvider.txt")
       val dispatchers = agent.loadAndInitializeDispatchers(cfg, cl, "spans")
-      dispatchers.size() shouldBe 1
+      dispatchers.size() shouldBe 2
       dispatchers.head.close()
     }
 

@@ -1,1 +1,2 @@
 com.expedia.www.haystack.agent.span.helpers.TestDispatcher
+com.expedia.www.haystack.agent.span.helpers.TestDispatcherEmptyConfig
