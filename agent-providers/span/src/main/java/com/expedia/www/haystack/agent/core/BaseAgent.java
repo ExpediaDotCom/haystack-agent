@@ -35,7 +35,6 @@ public abstract class BaseAgent implements Agent {
     public List<Dispatcher> loadAndInitializeDispatchers(final Config config, ClassLoader cl, String agentName) {
         final List<Dispatcher> dispatchers = new ArrayList<>();
         final ServiceLoader<Dispatcher> loadedDispatchers = ServiceLoader.load(Dispatcher.class, cl);
-
         for (final Dispatcher dispatcher : loadedDispatchers) {
             final Map<String, Config> dispatches = ConfigurationHelpers.readDispatchersConfig(config, agentName);
             dispatches
