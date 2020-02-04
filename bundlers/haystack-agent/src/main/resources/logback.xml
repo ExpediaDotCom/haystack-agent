@@ -1,7 +1,5 @@
 <configuration>
-    <logger name="com.expedia.www.haystack.agent.dispatcher.LoggerDispatcher" level="DEBUG">
-        <appender-ref ref="STDOUT-LOGGER_DISPATCHER" />
-    </logger>
+    <logger name="com.expedia.www.haystack.agent.dispatcher.LoggerDispatcher" level="DEBUG" />
 
     <jmxConfigurator />
 
@@ -15,14 +13,6 @@
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>
                 %d{yyyy-MM-dd HH:mm:ss:SSS} %thread, %level, %logger{70}, "%msg"%n
-            </Pattern>
-        </layout>
-    </appender>
-
-    <appender name="STDOUT-LOGGER_DISPATCHER" class="ch.qos.logback.core.ConsoleAppender">
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <Pattern>
-                %d{yyyy-MM-dd HH:mm:ss:SSS} "%msg"%n
             </Pattern>
         </layout>
     </appender>
