@@ -146,13 +146,12 @@ We have two agent providers today that are loaded depending upon the configurati
 
 ### Span Proto Agent
 
-This agent listens as a GRPC server on a configurable port and accepts the protobuf span from the clients. The span agent is already implemented in the open source repo and it supports all three dispatchers i.e. kinesis, Kafka and HTTP. Please note 
-that we bundle only this span proto agent and the AWS Kinesis dispatcher in our fat jar. 
+This agent listens as a GRPC server on a configurable port and accepts the protobuf span from the clients. The span agent is already implemented in the open source repo and it supports all three dispatchers i.e. kinesis, Kafka and HTTP. Please note that we bundle only this span proto agent and the AWS Kinesis dispatcher in our fat jar.
 
 ### Zipkin Agent (Pitchfork)
 
 This agent is influenced by pitchfork implementation [here](https://github.com/HotelsDotCom/pitchfork). The difference is that this can be run as a sidecar or daemon.
-It provides an http endpoint for publishing the [zipkin V2](https://zipkin.io/zipkin-api/#/default/post_spans) spans. It transforms zipkin formatted spans into haystack domain(protobuf) spans and dispatches to the configured sink. See below for list of supported dispatchers.
+It provides an http endpoint for publishing the [Zipkin V2](https://zipkin.io/zipkin-api/#/default/post_spans) spans. It transforms zipkin formatted spans into haystack domain (protobuf) spans and dispatches to the configured sink. See below for list of supported dispatchers.
 
 Agent's http server supports following  endpoints for publishing zipkin spans:
 
@@ -176,7 +175,7 @@ agents {
     stop.timeout.ms = 30000
     accept.null.timestamps = false
     max.timestamp.drift.sec = -1
-    
+
     dispatchers {
       kinesis {
         Region = us-west-2
@@ -185,10 +184,7 @@ agents {
         MetricsLevel = none
       }
       
-      kafka {
-        bootstrap.servers = kafka-svc:9092
-        producer.topic = spans
-      }
+      // more dispatchers
     }
   }
 }
@@ -196,8 +192,40 @@ agents {
 
 ### Blob Proto Agent
 
-This agent listens as a GRPC server on a configurable port and accepts the protobuf blob from the clients. The blob 
-agent is already implemented in the open source [blobs](https://github.com/ExpediaDotCom/blobs) repo and it supports S3 dispatcher.
+This agent listens as a GRPC server on a configurable port and accepts the protobuf blob from the clients. The blob agent is already implemented in the open source [blobs](https://github.com/ExpediaDotCom/blobs) repo and it supports S3 dispatcher.
+
+You can configure blob proto agent as shown below:
+
+```
+agents {
+  spans {
+    enabled = true
+    port = 35000
+
+    dispatchers {
+      // configure dispatchers
+    }
+  }
+  ossblobs {
+    enabled = false
+    port = 35001
+    max.blob.size.in.kb = 512
+    dispatchers {
+      s3 {
+        keep.alive = true
+        max.outstanding.requests = 150
+        should.wait.for.upload = true
+        max.connections = 50
+        retry.count = 1
+        bucket.name = "haystack-blobs"
+        region = "us-east-1"
+        aws.access.key = "accessKey"
+        aws.secret.key = "secretKey"
+      }
+    }
+  }
+}
+```
 
 ## Dispatchers
 
