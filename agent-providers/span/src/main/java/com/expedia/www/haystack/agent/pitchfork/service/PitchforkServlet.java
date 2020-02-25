@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.util.Map;
 
 import static com.expedia.www.haystack.agent.pitchfork.processors.ZipkinSpanProcessorFactory.*;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class PitchforkServlet extends HttpServlet {
     private final static Logger logger = LoggerFactory.getLogger(PitchforkServlet.class);
@@ -69,17 +70,19 @@ public class PitchforkServlet extends HttpServlet {
                 response.sendError(503, "Fail to process/forward the zipkin span!");
             }
         } else {
-            response.sendError(400, String.format("invalid content-type, supported values are %s, %s, %s",
-                    JSON_CONTENT_TYPE, THRIFT_CONTENT_TYPE, PROTO_CONTENT_TYPE));
+            response.sendError(400, String.format("invalid content-type, supported values are %s, %s, %s, got '%s'",
+                    JSON_CONTENT_TYPE, THRIFT_CONTENT_TYPE, PROTO_CONTENT_TYPE, request.getContentType()));
         }
     }
 
     private ZipkinSpanProcessor getProcessor(String contentType) {
-        final String[] contentTypes = contentType.split(";");
-        for (final String ctype : contentTypes) {
-            final ZipkinSpanProcessor processor = processors.get(ctype.toLowerCase());
-            if (processor != null) {
-                return processor;
+        if(!isEmpty(contentType) ) {
+            final String[] contentTypes = contentType.split(";");
+            for (final String ctype : contentTypes) {
+                final ZipkinSpanProcessor processor = processors.get(ctype.toLowerCase());
+                if (processor != null) {
+                    return processor;
+                }
             }
         }
         return null;
