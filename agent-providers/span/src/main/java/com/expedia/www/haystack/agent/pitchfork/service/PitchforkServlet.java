@@ -76,13 +76,14 @@ public class PitchforkServlet extends HttpServlet {
     }
 
     private ZipkinSpanProcessor getProcessor(String contentType) {
-        if(!isEmpty(contentType) ) {
-            final String[] contentTypes = contentType.split(";");
-            for (final String ctype : contentTypes) {
-                final ZipkinSpanProcessor processor = processors.get(ctype.toLowerCase());
-                if (processor != null) {
-                    return processor;
-                }
+        if (isEmpty(contentType)) {
+            return null;
+        }
+        final String[] contentTypes = contentType.split(";");
+        for (final String ctype : contentTypes) {
+            final ZipkinSpanProcessor processor = processors.get(ctype.toLowerCase());
+            if (processor != null) {
+                return processor;
             }
         }
         return null;
