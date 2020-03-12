@@ -42,8 +42,14 @@ public abstract class BaseAgent implements Agent {
                     .stream()
                     .filter((e) -> e.getKey().equalsIgnoreCase(dispatcher.getName()))
                     .forEach((conf) -> {
-                        dispatcher.initialize(conf.getValue());
-                        dispatchers.add(dispatcher);
+                        final Config dispatcherConfig = conf.getValue();
+                        boolean isEnabled = !dispatcherConfig.hasPath("enabled") || dispatcherConfig.getBoolean("enabled");
+                        if(isEnabled) {
+                            dispatcher.initialize(dispatcherConfig);
+                            dispatchers.add(dispatcher);
+                        } else {
+                            logger.info("dispatcher with name '{}' is disabled", dispatcher.getName());
+                        }
                     });
         }
 
