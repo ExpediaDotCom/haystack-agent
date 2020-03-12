@@ -77,7 +77,7 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
           |      test-dispatcher {
           |        queueName = "myqueue"
           |      }
-          |      test-dispatcher-empty-config {
+          |      test-dispatcher-2 {
           |         enabled = false
           |      }
           |    }
