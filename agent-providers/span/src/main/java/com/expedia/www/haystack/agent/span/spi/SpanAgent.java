@@ -20,6 +20,7 @@ package com.expedia.www.haystack.agent.span.spi;
 import com.expedia.www.haystack.agent.core.BaseAgent;
 import com.expedia.www.haystack.agent.span.enricher.Enricher;
 import com.expedia.www.haystack.agent.span.service.SpanAgentGrpcService;
+import com.expedia.www.haystack.agent.span.service.SpanGrpcHealthService;
 import com.typesafe.config.Config;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
@@ -55,6 +56,7 @@ public class SpanAgent extends BaseAgent {
                 .permitKeepAliveWithoutCalls(true)
                 .permitKeepAliveTime(KEEP_ALIVE_TIME_IN_SECONDS, TimeUnit.SECONDS)
                 .addService(new SpanAgentGrpcService(dispatchers, enrichers))
+                .addService(new SpanGrpcHealthService())
                 .build()
                 .start();
 
