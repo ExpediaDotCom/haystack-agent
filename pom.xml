@@ -15,6 +15,7 @@
         <module>agent-dispatchers/kafka</module>
         <module>agent-dispatchers/kinesis</module>
         <module>agent-dispatchers/http</module>
+        <module>agent-dispatchers/logger</module>
         <module>bundlers/haystack-agent</module>
     </modules>
 
@@ -70,7 +71,7 @@
         <protobuf.version>3.4.0</protobuf.version>
         <logback.version>1.2.3</logback.version>
         <slf4j-api.version>1.7.25</slf4j-api.version>
-        <jackson.version>2.9.10.1</jackson.version>
+        <jackson.version>2.9.10.4</jackson.version>
         <jackson-dataformat.version>2.9.10</jackson-dataformat.version>
         <commons-lang.version>3.4</commons-lang.version>
         <grpc.version>1.9.0</grpc.version>
@@ -120,6 +121,12 @@
             <dependency>
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-all</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-services</artifactId>
                 <version>${grpc.version}</version>
             </dependency>
 

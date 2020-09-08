@@ -44,6 +44,11 @@
         </dependency>
         <dependency>
             <groupId>com.expedia.www</groupId>
+            <artifactId>haystack-agent-logger-dispatcher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.expedia.www</groupId>
             <artifactId>blobs-agent-dispatchers</artifactId>
             <version>${blobs.version}</version>
         </dependency>

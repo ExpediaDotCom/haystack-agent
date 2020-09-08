@@ -93,7 +93,7 @@ public class ConfigurationHelpers {
         final Map<String, Config> dispatchersConfigMap = new HashMap<>();
 
         final Set<String> dispatcherNames = new HashSet<>();
-        dispatchers.entrySet().forEach((e) -> dispatcherNames.add(findRootKeyName(e.getKey())));
+        dispatchers.root().keySet().forEach((e) -> dispatcherNames.add(findRootKeyName(e)));
 
         dispatcherNames.forEach((name) -> dispatchersConfigMap.put(name, addAgentNameToConfig(dispatchers.getConfig(name), agentName)));
         return dispatchersConfigMap;

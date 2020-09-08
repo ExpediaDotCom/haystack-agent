@@ -36,7 +36,6 @@ public abstract class BaseAgent implements Agent {
     public List<Dispatcher> loadAndInitializeDispatchers(final Config config, ClassLoader cl, String agentName) {
         final List<Dispatcher> dispatchers = new ArrayList<>();
         final ServiceLoader<Dispatcher> loadedDispatchers = ServiceLoader.load(Dispatcher.class, cl);
-
         for (final Dispatcher dispatcher : loadedDispatchers) {
             final Map<String, Config> dispatches = ConfigurationHelpers.readDispatchersConfig(config, agentName);
             dispatches
@@ -44,8 +43,14 @@ public abstract class BaseAgent implements Agent {
                     .stream()
                     .filter((e) -> e.getKey().equalsIgnoreCase(dispatcher.getName()))
                     .forEach((conf) -> {
-                        dispatcher.initialize(conf.getValue());
-                        dispatchers.add(dispatcher);
+                        final Config dispatcherConfig = conf.getValue();
+                        boolean isEnabled = !dispatcherConfig.hasPath("enabled") || dispatcherConfig.getBoolean("enabled");
+                        if(isEnabled) {
+                            dispatcher.initialize(dispatcherConfig);
+                            dispatchers.add(dispatcher);
+                        } else {
+                            logger.info("dispatcher with name '{}' is disabled", dispatcher.getName());
+                        }
                     });
         }
 

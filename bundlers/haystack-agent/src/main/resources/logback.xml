@@ -1,4 +1,6 @@
 <configuration>
+    <logger name="com.expedia.www.haystack.agent.dispatcher.LoggerDispatcher" level="DEBUG" />
+
     <jmxConfigurator />
 
     <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>

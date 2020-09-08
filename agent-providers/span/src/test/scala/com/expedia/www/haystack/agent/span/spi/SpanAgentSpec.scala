@@ -54,14 +54,66 @@ class SpanAgentSpec extends FunSpec with Matchers with EasyMockSugar {
           |      test-dispatcher {
           |        queueName = "myqueue"
           |      }
+          |      test-dispatcher-empty-config {
+          |      }
+          |    }
+        """.stripMargin)
+
+      val cl = new ReplacingClassLoader(getClass.getClassLoader, dispatcherLoadFile, "dispatcherProvider.txt")
+      val dispatchers = agent.loadAndInitializeDispatchers(cfg, cl, "spans")
+      dispatchers.size() shouldBe 2
+      dispatchers.map(_.getName) should contain allOf ("test-dispatcher", "test-dispatcher-empty-config")
+      dispatchers.foreach(_.close())
+    }
+
+    it("should not load an unknown dispatcher") {
+      val agent = new SpanAgent()
+      val cfg = ConfigFactory.parseString(
+        """
+          |    k1 = "v1"
+          |    port = 8080
+          |
+          |    dispatchers {
+          |      test-dispatcher {
+          |        queueName = "myqueue"
+          |      }
+          |      test-dispatcher-3 {
+          |         enabled = false
+          |      }
           |    }
         """.stripMargin)
 
       val cl = new ReplacingClassLoader(getClass.getClassLoader, dispatcherLoadFile, "dispatcherProvider.txt")
       val dispatchers = agent.loadAndInitializeDispatchers(cfg, cl, "spans")
       dispatchers.size() shouldBe 1
-      dispatchers.head.close()
+      dispatchers.head.getName shouldBe "test-dispatcher"
+      dispatchers.foreach(_.close())
     }
+
+    it("should not load a 'disabled' dispatcher") {
+      val agent = new SpanAgent()
+      val cfg = ConfigFactory.parseString(
+        """
+          |    k1 = "v1"
+          |    port = 8080
+          |
+          |    dispatchers {
+          |      test-dispatcher {
+          |        queueName = "myqueue"
+          |      }
+          |      test-dispatcher-2 {
+          |         enabled = false
+          |      }
+          |    }
+        """.stripMargin)
+
+      val cl = new ReplacingClassLoader(getClass.getClassLoader, dispatcherLoadFile, "dispatcherProvider.txt")
+      val dispatchers = agent.loadAndInitializeDispatchers(cfg, cl, "spans")
+      dispatchers.size() shouldBe 1
+      dispatchers.head.getName shouldBe "test-dispatcher"
+      dispatchers.foreach(_.close())
+    }
+
 
     it("initialization should fail if no dispatchers exist") {
       val agent = new SpanAgent()
