@@ -36,6 +36,8 @@ import static java.util.Optional.empty;
 @SuppressWarnings("PMD.UnusedPrivateMethod")
 class HaystackDomainConverter {
 
+    private static final String SPAN_KIND_TAG_KEY = "span.kind";
+
     private HaystackDomainConverter() { }
     /**
      * Accepts a span in {@code Zipkin V2} format and returns a span in {@code Haystack} format.
@@ -53,7 +55,9 @@ class HaystackDomainConverter {
 
         builder.addAllTags(addRemoteEndpointAsTags(zipkin.remoteEndpoint()));
 
-        getTagForKind(zipkin.kind()).ifPresent(builder::addTags);
+        if (!spanKindTagPresent(zipkin)) {
+            getTagForKind(zipkin.kind()).ifPresent(builder::addTags);
+        }
 
         if (zipkin.tags() != null && !zipkin.tags().isEmpty()) {
             zipkin.tags().forEach((key, value) -> {
@@ -111,6 +115,12 @@ class HaystackDomainConverter {
         }
     }
 
+    private static boolean spanKindTagPresent(zipkin2.Span zipkinSpan) {
+        return zipkinSpan.tags() != null &&
+            !zipkinSpan.tags().isEmpty() &&
+            zipkinSpan.tags().keySet().contains(SPAN_KIND_TAG_KEY);
+    }
+
     private static Optional<Tag> getTagForKind(zipkin2.Span.Kind kind) {
         String value;
 
@@ -133,7 +143,7 @@ class HaystackDomainConverter {
             }
 
             return Optional.of(Tag.newBuilder()
-                    .setKey("span.kind")
+                    .setKey(SPAN_KIND_TAG_KEY)
                     .setVStr(value)
                     .setType(Tag.TagType.STRING)
                     .build());
