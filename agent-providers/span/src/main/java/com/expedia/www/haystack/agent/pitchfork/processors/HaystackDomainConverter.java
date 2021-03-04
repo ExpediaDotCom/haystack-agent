@@ -153,22 +153,32 @@ class HaystackDomainConverter {
     }
 
     private static List<Tag> fromZipkinTag(String key, String value) {
-        if ("error".equalsIgnoreCase(key) && !"false".equalsIgnoreCase(value)) {
+        if ("error".equalsIgnoreCase(key)) {
             // Zipkin error tags are Strings where as in Haystack they're Booleans
             // Since a Zipkin error tag may contain relevant information about the error we expand it into two tags (error + error message)
-            Tag errorTag = Tag.newBuilder()
+            if (!"false".equalsIgnoreCase(value)) {
+                Tag errorTag = Tag.newBuilder()
                     .setKey(key)
                     .setVBool(true)
                     .setType(Tag.TagType.BOOL)
                     .build();
 
-            Tag errorMessageTag = Tag.newBuilder()
+                Tag errorMessageTag = Tag.newBuilder()
                     .setKey("error_msg")
                     .setVStr(value)
                     .setType(Tag.TagType.STRING)
                     .build();
 
-            return Arrays.asList(errorTag, errorMessageTag);
+                return Arrays.asList(errorTag, errorMessageTag);
+            } else {
+                final Tag errorTag = Tag.newBuilder()
+                    .setKey(key)
+                    .setVBool(false)
+                    .setType(Tag.TagType.BOOL)
+                    .build();
+
+                return Collections.singletonList(errorTag);
+            }
         }
 
         final Tag tag = Tag.newBuilder()
