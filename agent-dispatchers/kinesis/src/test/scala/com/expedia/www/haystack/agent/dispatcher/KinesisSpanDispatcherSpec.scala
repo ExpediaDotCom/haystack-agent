@@ -26,6 +26,7 @@ import com.amazonaws.services.kinesis.producer.{KinesisProducer, UserRecordResul
 import com.codahale.metrics.{Meter, Timer}
 import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.agent.dispatcher.KinesisDispatcher._
+import com.expedia.www.haystack.agent.core.RateLimitException
 import com.google.common.util.concurrent.ListenableFuture
 import org.easymock.EasyMock
 import org.scalatest.easymock.EasyMockSugar
@@ -161,11 +162,9 @@ class KinesisSpanDispatcherSpec extends FunSpec with Matchers with EasyMockSugar
       }
 
       whenExecuting(kinesisProducer, outstandRecErrorMeter) {
-        val caught = intercept[Exception] {
+        val caught = intercept[RateLimitException] {
           dispatcher.dispatch(span.getTraceId.getBytes("utf-8"), span.toByteArray)
         }
-
-        caught.getMessage shouldEqual "fail to dispatch to kinesis due to rate limit, outstanding records: 1001"
       }
     }
   }

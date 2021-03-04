@@ -61,6 +61,7 @@ public class KinesisDispatcher implements Dispatcher {
 
     Timer dispatchTimer;
     Meter dispatchFailureMeter;
+    Meter dispatchSuccessMeter;
     Meter outstandingRecordsError;
 
     KinesisProducer producer;
@@ -102,6 +103,8 @@ public class KinesisDispatcher implements Dispatcher {
 
         this.producer = new KinesisProducer(buildKinesisProducerConfiguration(props));
         this.dispatchTimer = newTimer(buildMetricName(agentName, "kinesis.dispatch.timer"));
+        
+        this.dispatchSuccessMeter = newMeter(buildMetricName(agentName, "kinesis.dispatch.success"));
         this.dispatchFailureMeter = newMeter(buildMetricName(agentName, "kinesis.dispatch.failure"));
         this.outstandingRecordsError = newMeter(buildMetricName(agentName, "kinesis.dispatch.outstanding.records.error"));
         newGauge(buildMetricName(agentName, "kinesis.outstanding.requests"),
@@ -112,7 +115,7 @@ public class KinesisDispatcher implements Dispatcher {
 
     @Override
     public void close() {
-        LOGGER.info("Closing the kinesis span dispatcher now...");
+        LOGGER.info("Closing the kinesis dispatcher now...");
         if (producer != null) {
             producer.flushSync();
             producer.destroy();
@@ -177,8 +180,10 @@ public class KinesisDispatcher implements Dispatcher {
                 timer.close();
                 if(!result.isSuccessful()) {
                     dispatchFailureMeter.mark();
-                    LOGGER.error("Fail to put the span record to kinesis after attempts={}",
+                    LOGGER.error("Fail to put the record to kinesis after attempts={}",
                             formatAttempts(result.getAttempts()));
+                } else {
+                    dispatchSuccessMeter.mark();
                 }
             }
 
@@ -190,7 +195,7 @@ public class KinesisDispatcher implements Dispatcher {
                 if (throwable instanceof UserRecordFailedException) {
                     final UserRecordFailedException e = (UserRecordFailedException) throwable;
                     final UserRecordResult result = e.getResult();
-                    LOGGER.error("Record failed to put span record to kinesis with attempts={}",
+                    LOGGER.error("Record failed to put record to kinesis with attempts={}",
                             formatAttempts(result.getAttempts()), e);
                 }
             }
