@@ -4,6 +4,7 @@ import com.expedia.www.haystack.agent.core.config.ConfigurationHelpers;
 import com.expedia.www.haystack.agent.span.enricher.Enricher;
 import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 
@@ -53,7 +54,11 @@ public abstract class BaseAgent implements Agent {
                     });
         }
 
-        Validate.notEmpty(dispatchers, "Span agent dispatchers can't be an empty set");
+        Validate.notEmpty(
+                dispatchers,
+                "%s agent dispatchers can't be an empty set",
+                StringUtils.capitalize(getName())
+        );
 
         return dispatchers;
     }
@@ -66,7 +71,7 @@ public abstract class BaseAgent implements Agent {
                     .map(clazz -> {
                         try {
                             final Class c = Class.forName(clazz);
-                            logger.info("Initializing the span enricher with class name '{}'", clazz);
+                            logger.info("Initializing the {} enricher with class name '{}'", getName(), clazz);
                             return (Enricher) c.newInstance();
                         } catch (Exception e) {
                             logger.error("Fail to initialize the enricher with clazz name {}", clazz, e);
