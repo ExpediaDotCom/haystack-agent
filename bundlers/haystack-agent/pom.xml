@@ -51,11 +51,23 @@
             <groupId>com.expedia.www</groupId>
             <artifactId>blobs-agent-dispatchers</artifactId>
             <version>${blobs.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.expedia.www</groupId>
+                    <artifactId>haystack-agent-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.expedia.www</groupId>
             <artifactId>blobs-agent-server</artifactId>
             <version>${blobs.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.expedia.www</groupId>
+                    <artifactId>haystack-agent-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- grpc -->
         <dependency>

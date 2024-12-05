@@ -68,20 +68,19 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.jdk.version>1.8</project.jdk.version>
-        <protobuf.version>3.4.0</protobuf.version>
-        <logback.version>1.2.3</logback.version>
-        <slf4j-api.version>1.7.25</slf4j-api.version>
-        <jackson.version>2.9.10.4</jackson.version>
-        <jackson-dataformat.version>2.9.10</jackson-dataformat.version>
-        <commons-lang.version>3.4</commons-lang.version>
-        <grpc.version>1.9.0</grpc.version>
+        <protobuf.version>3.25.5</protobuf.version>
+        <logback.version>1.2.13</logback.version>
+        <slf4j-api.version>1.7.36</slf4j-api.version>
+        <jackson.version>2.13.5</jackson.version>
+        <commons-lang.version>3.17.0</commons-lang.version>
+        <grpc.version>1.68.2</grpc.version>
         <metrics-core.version>3.2.5</metrics-core.version>
         <jaxb.version>2.3.0</jaxb.version>
         <javax.activation.version>1.1.1</javax.activation.version>
         <blobs.version>1.0.3</blobs.version>
 
-        <jetty.version>9.4.18.v20190429</jetty.version>
-        <zipkin2.version>2.15.0</zipkin2.version>
+        <jetty.version>9.4.56.v20240826</jetty.version>
+        <zipkin2.version>2.27.1</zipkin2.version>
         <scala.major.version>2</scala.major.version>
         <scala.minor.version>12</scala.minor.version>
         <scala.tiny.version>6</scala.tiny.version>
@@ -93,9 +92,9 @@
         <easymock.version>3.6</easymock.version>
         <junit.version>4.12</junit.version>
 
-        <aws-sdk.version>1.11.128</aws-sdk.version>
+        <aws-sdk.version>1.12.779</aws-sdk.version>
         <typesafe-config.version>1.3.1</typesafe-config.version>
-        <commons-io.version>2.6</commons-io.version>
+        <commons-io.version>2.18.0</commons-io.version>
 
         <maven-pmd-plugin.version>3.0.1</maven-pmd-plugin.version>
         <pmd.version>5.1.3</pmd.version>
@@ -180,30 +179,25 @@
             </dependency>
 
             <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-yaml</artifactId>
-                <version>${jackson-dataformat.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
                 <version>${jackson.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-sts</artifactId>
+                <artifactId>aws-java-sdk-bom</artifactId>
                 <version>${aws-sdk.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-server</artifactId>
-                <version>${jetty.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-servlet</artifactId>
+                <artifactId>jetty-bom</artifactId>
                 <version>${jetty.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>io.zipkin.zipkin2</groupId>
