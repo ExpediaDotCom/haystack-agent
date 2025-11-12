@@ -13,7 +13,7 @@
     <artifactId>haystack-agent-kinesis-dispatcher</artifactId>
 
     <properties>
-        <aws.kinesis.producer.lib.version>0.14.0</aws.kinesis.producer.lib.version>
+        <aws.kinesis.producer.lib.version>0.15.12</aws.kinesis.producer.lib.version>
     </properties>
 
     <dependencies>

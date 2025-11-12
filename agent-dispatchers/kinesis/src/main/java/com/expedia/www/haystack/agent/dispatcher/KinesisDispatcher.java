@@ -34,6 +34,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.typesafe.config.Config;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -194,7 +195,7 @@ public class KinesisDispatcher implements Dispatcher {
                             formatAttempts(result.getAttempts()), e);
                 }
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     private String formatAttempts(final List<Attempt> attempts) {
