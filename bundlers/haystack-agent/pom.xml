@@ -197,6 +197,11 @@
                                 <exclude>**/com/expedia/open/tracing/**/*</exclude>
                             </excludes>
                             <skip>true</skip>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                </rule>
+                            </rules>
                         </configuration>
                     </execution>
                 </executions>
