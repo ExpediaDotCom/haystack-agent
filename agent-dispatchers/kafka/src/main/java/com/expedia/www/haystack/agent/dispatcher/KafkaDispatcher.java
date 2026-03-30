@@ -30,8 +30,6 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.TimeUnit;
-
 import static com.expedia.www.haystack.agent.core.metrics.SharedMetricRegistry.*;
 
 
@@ -90,7 +88,7 @@ public class KafkaDispatcher implements Dispatcher {
         LOGGER.info("Closing the kafka dispatcher now...");
         if(producer != null) {
             producer.flush();
-            producer.close(10, TimeUnit.SECONDS);
+            producer.close(java.time.Duration.ofSeconds(10));
             producer = null;
         }
     }

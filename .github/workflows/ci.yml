@@ -1,0 +1,211 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn clean install -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: haystack-agent-jar
+          path: bundlers/haystack-agent/target/haystack-agent-*.jar
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Maven Central and Docker Hub
+    runs-on: ubuntu-latest
+    needs: build
+    # Only deploy on master branch (non-PR) or on tags
+    if: |
+      (github.ref == 'refs/heads/master' && github.event_name == 'push') ||
+      startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+          cache: 'maven'
+
+      - name: Import GPG key
+        if: env.GPG_SECRET_KEYS != ''
+        env:
+          GPG_SECRET_KEYS: ${{ secrets.GPG_SECRET_KEYS }}
+          GPG_OWNERTRUST: ${{ secrets.GPG_OWNERTRUST }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          if [ ! -z "$GPG_SECRET_KEYS" ]; then
+            echo "$GPG_SECRET_KEYS" | base64 --decode | gpg --batch --import
+          fi
+          if [ ! -z "$GPG_OWNERTRUST" ]; then
+            echo "$GPG_OWNERTRUST" | base64 --decode | gpg --batch --import-ownertrust
+          fi
+
+      - name: Create Maven settings.xml
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << 'EOF'
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                http://maven.apache.org/xsd/settings-1.0.0.xsd">
+              <servers>
+                  <server>
+                      <id>ossrh</id>
+                      <username>${env.SONATYPE_USERNAME}</username>
+                      <password>${env.SONATYPE_PASSWORD}</password>
+                  </server>
+              </servers>
+              <profiles>
+                <profile>
+                  <id>ossrh</id>
+                  <activation>
+                    <activeByDefault>true</activeByDefault>
+                  </activation>
+                  <properties>
+                    <gpg.executable>gpg</gpg.executable>
+                    <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+                  </properties>
+                </profile>
+              </profiles>
+          </settings>
+          EOF
+
+      - name: Determine version and GPG settings
+        id: version
+        run: |
+          if [ ! -z "${{ github.ref_name }}" ] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            # This is a tag release
+            VERSION=${{ github.ref_name }}
+            echo "AGENT_JAR_VERSION=$VERSION" >> $GITHUB_ENV
+            echo "SKIP_GPG_SIGN=false" >> $GITHUB_ENV
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Travis tag is set -> updating pom.xml <version> attribute to $VERSION"
+            mvn org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion=$VERSION -q
+          else
+            # This is a snapshot build
+            VERSION=$(cat pom.xml | sed -n -e 's/.*<version>\(.*\)<\/version>.*/\1/p' | head -1)
+            echo "AGENT_JAR_VERSION=$VERSION" >> $GITHUB_ENV
+            echo "SKIP_GPG_SIGN=true" >> $GITHUB_ENV
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "No tag set, hence keeping the snapshot version in pom.xml: $VERSION"
+          fi
+
+      - name: Deploy to Maven Central
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          if [ -z "$SONATYPE_USERNAME" ]; then
+            echo "ERROR! Please set SONATYPE_USERNAME secret"
+            exit 1
+          fi
+          if [ -z "$SONATYPE_PASSWORD" ]; then
+            echo "ERROR! Please set SONATYPE_PASSWORD secret"
+            exit 1
+          fi
+
+          mvn clean deploy -Dgpg.skip=$SKIP_GPG_SIGN -DskipTests=true -B -U
+          echo "Successfully deployed the jars to Nexus"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Prepare Docker build
+        run: |
+          cp bundlers/haystack-agent/target/haystack-agent-${AGENT_JAR_VERSION}.jar bundlers/haystack-agent/target/haystack-agent.jar
+
+      - name: Extract Docker metadata
+        id: meta
+        run: |
+          DOCKER_ORG=expediadotcom
+          DOCKER_IMAGE_NAME=haystack-agent
+          VERSION=${{ env.AGENT_JAR_VERSION }}
+
+          echo "DOCKER_ORG=$DOCKER_ORG" >> $GITHUB_ENV
+          echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
+          echo "QUALIFIED_IMAGE=$DOCKER_ORG/$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
+
+          # Determine tags based on version
+          TAGS=""
+          if [[ $VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            # Release version - create multiple tags
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            PATCH="${BASH_REMATCH[3]}"
+
+            TAGS="$DOCKER_ORG/$DOCKER_IMAGE_NAME:$MAJOR"
+            TAGS="$TAGS,$DOCKER_ORG/$DOCKER_IMAGE_NAME:$MAJOR.$MINOR"
+            TAGS="$TAGS,$DOCKER_ORG/$DOCKER_IMAGE_NAME:$MAJOR.$MINOR.$PATCH"
+            TAGS="$TAGS,$DOCKER_ORG/$DOCKER_IMAGE_NAME:latest"
+            echo "Pushing released version to Docker Hub with tags: $TAGS"
+          else
+            # Snapshot version
+            TAGS="$DOCKER_ORG/$DOCKER_IMAGE_NAME:$VERSION"
+            echo "Pushing snapshot version to Docker Hub with tag: $TAGS"
+          fi
+
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  notify:
+    name: Send notifications
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    if: failure() && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+
+    steps:
+      - name: Notify on failure
+        run: |
+          echo "Build or deployment failed. In Travis CI, this would send email to haystack-notifications@expedia.com"
+          echo "Consider setting up GitHub Actions email notifications or Slack webhooks."

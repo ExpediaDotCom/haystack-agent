@@ -11,6 +11,10 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
+    <properties>
+        <okhttp.version>2.7.5</okhttp.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.expedia.www</groupId>
@@ -32,6 +36,12 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

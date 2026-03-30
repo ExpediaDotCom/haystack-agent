@@ -44,7 +44,7 @@ class KafkaDispatcherSpec extends FunSpec with Matchers with EasyMockSugar {
       expecting {
         producer.send(EasyMock.capture(capturedProducerRecord), EasyMock.anyObject(classOf[Callback])).andReturn(future).once()
         producer.flush().once()
-        producer.close(10, TimeUnit.SECONDS).once
+        producer.close(java.time.Duration.ofSeconds(10)).once
         timer.time().andReturn(timerContext)
       }
 
